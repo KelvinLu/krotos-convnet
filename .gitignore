@@ -55,3 +55,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# ad hoc scripting
+ad_hoc_test.py

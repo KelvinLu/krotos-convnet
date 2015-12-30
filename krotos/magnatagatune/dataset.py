@@ -9,6 +9,8 @@
 import os
 import numpy as np
 
+from krotos.audio.spectrogram import mel_spectrogram
+
 
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -24,6 +26,7 @@ class Dataset(object):
 
     @classmethod
     def _load_csv(cls):
+        # Read .csv file
         with open(ANNOTATIONS_FILE, 'rb') as csv_tags:
             header = csv_tags.readline().rstrip().split(',')
             header[0] = 'id'
@@ -34,7 +37,15 @@ class Dataset(object):
                 dtype='i4,' + 'i4,' * (len(header) - 2) + 'S256'
             )
 
+        # Get each tag's name
         cls.fields      = list(annotations.dtype.names)[1:-1]
+
+        # Trim dataset samples that don't have any tags
+        tags_ndarray = annotations[cls.fields].view(('i4', len(cls.fields)))
+        has_tags = np.sum(tags_ndarray, axis=1) > 0
+        annotations = annotations[has_tags]
+
+        # Get slices for each part of the dataset; ids, tags, and mp3 paths
         cls._ids        = annotations[header[0]]
         cls._tags       = annotations[cls.fields]
         cls._mp3_paths  = annotations['mp3_path']
@@ -53,18 +64,19 @@ class Dataset(object):
         spectrogram_path = os.path.join(SPECTROGRAM_DIR, '{0}.mel' % sample_id)
 
         if file_cache and os.path.exists(spectrogram_path):
-            # load cached spectrogram from file
+            # TODO: Load cached spectrogram from file
             pass
 
         mp3_path = os.path.join(MP3_DIR, cls._mp3_paths[sample_ind])
+        assert os.path.exists(mp3_path)
 
-        print mp3_path, os.path.exists(mp3_path)
+        spectrogram = mel_spectrogram(mp3_path)
 
         if file_cache:
-            # save spectrogram
+            # TODO: Save spectrogram to file
             pass
 
-        raise NotImplemented
+        return spectrogram
 
     def __init__(self, training_split=0.7, validation_split=0.1, testing_split=0.3):
         if not self._loaded:
@@ -85,8 +97,13 @@ class Dataset(object):
         batch_inds = np.random.choice(self._training_inds, size=samples, replace=False)
 
         for ind in batch_inds:
-            self._get_spectrogram(ind)
+            yield self._get_spectrogram(ind), self._tags[ind]
 
-        raise NotImplemented
+    def human_examine(self, samples=5):
+        batch_inds = np.random.choice(self.sample_size, size=samples, replace=False)
 
-        return [], []
+        for ind in batch_inds:
+            yield (self._get_spectrogram(ind),
+                [field for field, tag in zip(self.fields, self._tags[ind]) if tag],
+                os.path.join(MP3_DIR, self._mp3_paths[ind])
+            )
