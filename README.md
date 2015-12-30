@@ -1,4 +1,4 @@
-# magnatagatune-convnet (krotos)
+# krotos-convnet
 Experiments with songs and convolutional neural networks.
 
 A pet project for learning how to use TensorFlow and sating my interests in "deep" (relative to a college student laptop's processing powers) learning.
