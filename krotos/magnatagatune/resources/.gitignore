@@ -1,5 +1,4 @@
 *.csv
-.~lock.*
 *.zip
-mp3/
-mp3_echonest_xml/
+.~lock.*
+mp3/*

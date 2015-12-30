@@ -12,29 +12,21 @@ import numpy as np
 
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
-RESOURCES_DIR = 'resources'
-ANNOTATIONS_FILE = 'annotations_final.csv'
-MP3_DIR = 'mp3'
+RESOURCES_DIR = os.path.join(ROOT_PATH, 'resources')
+SPECTROGRAM_DIR = os.path.join(RESOURCES_DIR, 'spectrogram_cache')
+ANNOTATIONS_FILE = os.path.join(RESOURCES_DIR, 'annotations_final.csv')
+MP3_DIR = os.path.join(RESOURCES_DIR, 'mp3')
 
 
 
-class _MagnaTagATuneDataset(type):
-    _instances = {}
+class Dataset(object):
     _loaded = False
 
-    def __call__(cls, *args, **kwargs):
-        if not cls._loaded:
-            cls._load_csv()
-
-        return super(_MagnaTagATuneDataset, cls).__call__(*args, **kwargs)
-
+    @classmethod
     def _load_csv(cls):
-        annotations_path = os.path.join(ROOT_PATH, RESOURCES_DIR, ANNOTATIONS_FILE)
-
-        assert os.path.exists(annotations_path)
-
-        with open(annotations_path, 'rb') as csv_tags:
+        with open(ANNOTATIONS_FILE, 'rb') as csv_tags:
             header = csv_tags.readline().rstrip().split(',')
+            header[0] = 'id'
 
             annotations = np.genfromtxt(csv_tags,
                 delimiter=',',
@@ -55,13 +47,29 @@ class _MagnaTagATuneDataset(type):
 
         cls._loaded = True
 
-    def _get_spectrogram(cls, sample_ind, file_cache=True, memory_cache=False):
+    @classmethod
+    def _get_spectrogram(cls, sample_ind, file_cache=True):
+        sample_id = cls._ids[sample_ind]
+        spectrogram_path = os.path.join(SPECTROGRAM_DIR, '{0}.mel' % sample_id)
+
+        if file_cache and os.path.exists(spectrogram_path):
+            # load cached spectrogram from file
+            pass
+
+        mp3_path = os.path.join(MP3_DIR, cls._mp3_paths[sample_ind])
+
+        print mp3_path, os.path.exists(mp3_path)
+
+        if file_cache:
+            # save spectrogram
+            pass
+
         raise NotImplemented
 
-class Dataset(object):
-    __metaclass__ = _MagnaTagATuneDataset
-
     def __init__(self, training_split=0.7, validation_split=0.1, testing_split=0.3):
+        if not self._loaded:
+            self._load_csv()
+
         self._split_dataset(training_split, validation_split, testing_split)
 
     def _split_dataset(self, training_split, validation_split, testing_split):
@@ -69,21 +77,16 @@ class Dataset(object):
         total = float(training_split + validation_split + testing_split)
         cut_1 = int(self.sample_size * ((training_split) / total))
         cut_2 = int(self.sample_size * ((training_split + validation_split) / total))
-        training_inds     = shuffle[:cut_1]
-        validation_inds   = shuffle[cut_1:cut_2]
-        testing_inds      = shuffle[cut_2:]
-
-        self._training_ids          = self._ids[training_inds]
-        self._validation_ids        = self._ids[validation_inds]
-        self._testing_ids           = self._ids[testing_inds]
-
-        self._training_tags         = self._tags[training_inds]
-        self._validation_tags       = self._tags[validation_inds]
-        self._testing_tags          = self._tags[testing_inds]
-
-        self._training_mp3_paths    = self._mp3_paths[training_inds]
-        self._validation_mp3_paths  = self._mp3_paths[validation_inds]
-        self._testing_mp3_paths     = self._mp3_paths[testing_inds]
+        self._training_inds     = shuffle[:cut_1]
+        self._validation_inds   = shuffle[cut_1:cut_2]
+        self._testing_inds      = shuffle[cut_2:]
 
     def minibatch(self, samples=10):
+        batch_inds = np.random.choice(self._training_inds, size=samples, replace=False)
+
+        for ind in batch_inds:
+            self._get_spectrogram(ind)
+
         raise NotImplemented
+
+        return [], []
