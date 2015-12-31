@@ -4,14 +4,15 @@ import os
 import subprocess
 import tempfile
 
+from krotos.msd.processing import make_minibatch
 from krotos.paths import PATHS
 from krotos.exceptions import ErrorCallException
-
+from krotos.debug import report
 
 
 class Dataset(object):
-    _shuffled = False
     _initalized = False
+    _shuffled = False
     _files = {
         'manifest': None,
         'linecount': None
@@ -27,6 +28,8 @@ class Dataset(object):
 
         cls._shuffled = True
 
+        report("Million Song Dataset manifest shuffled.")
+
     @classmethod
     def _initalize(cls):
         p = subprocess.Popen(['wc', '-l', PATHS['msd_tracks']], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -37,14 +40,14 @@ class Dataset(object):
 
         cls._initalized = True
 
-    def __init__(self, use_existing=False, training_split=0.7, validation_split=0.1, testing_split=0.3):
-        if not self._shuffled or force_shuffle:
-            self._shuffle()
+        report("Million Song Dataset manifest contains %d tracks." % cls._files['linecount'])
 
+    def __init__(self, use_existing=False, training_split=0.7, validation_split=0.1, testing_split=0.2):
         if not self._initalized:
             self._initalize()
 
         if not (use_existing and self._load_dataset(lenient=True)):
+            self._shuffle()
             self._split_dataset(training_split, validation_split, testing_split)
 
     def _split_dataset(self, training_split, validation_split, testing_split):
@@ -76,6 +79,9 @@ class Dataset(object):
             f.flush()
             f.close()
 
+        split_percentages = (training_split / total * 100, validation_split / total * 100, testing_split / total * 100)
+        report("Million Song Dataset split into %2.0f%% training, %2.0f%% validation, %2.0f%% testing." % split_percentages)
+
         self._load_dataset()
 
     def _load_dataset(self, lenient=False):
@@ -85,8 +91,13 @@ class Dataset(object):
                 'validation':   open(os.path.join(PATHS['sets_cache'], 'validation_set.txt'), 'r'),
                 'testing':      open(os.path.join(PATHS['sets_cache'], 'testing_set.txt'), 'r')
             }
+
+            report("Million Song Dataset loaded in %s." % PATHS['sets_cache'])
         except IOError as e:
             if lenient: return False
             raise e
 
         return True
+
+    def get_minibatch(self, samples=10):
+        minibatch = make_minibatch(samples, self.files['training'])
