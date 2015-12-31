@@ -17,11 +17,13 @@ We will then construct a web service to gauge musical compatibility for SoundClo
 
 (This is a tentative list)
 
-- Modelling and processing
+- Modelling
   - TensorFlow
+- Processing
   - NumPy, SciPy
   - [LibROSA](http://bmcfee.github.io/librosa/index.html)
   - scikits.samplerate
+  - HDF5
 - Web service
   - Flask
   - Redis
@@ -36,7 +38,7 @@ We will then construct a web service to gauge musical compatibility for SoundClo
 ## Inspiration and citations
 
 - Sander Dieleman on his work at Spotify, [our main source of inspiration](http://benanne.github.io/2014/08/05/spotify-cnns.html)
-- Thierry Bertin-Mahieux, Daniel P.W. Ellis, Brian Whitman, and Paul Lamere. 
+- Thierry Bertin-Mahieux, Daniel P.W. Ellis, Brian Whitman, and Paul Lamere.
 ["The Million Song Dataset."](http://ismir2011.ismir.net/papers/OS6-1.pdf) ISMIR. 2011.
 - Law, Edith, et al. ["Evaluation of Algorithms Using Games: The Case of Music Tagging."](http://ismir2009.ismir.net/proceedings/OS5-5.pdf) ISMIR. 2009.
 - Van den Oord, Aaron, Sander Dieleman, and Benjamin Schrauwen. ["Deep content-based music recommendation."](http://papers.nips.cc/paper/5004-deep-content-based-music-recommendation.pdf) Advances in Neural Information Processing Systems. 2013.

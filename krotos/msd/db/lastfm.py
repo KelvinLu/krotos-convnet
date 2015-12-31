@@ -1,0 +1,2 @@
+class LastFMTagsDB(object):
+    pass
