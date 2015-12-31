@@ -1,12 +1,24 @@
 import os
 import h5py
+import random
 
 from krotos.paths import PATHS
 
 
 
-def metadata(h5_song):
-    path = os.path.join(PATHS['msd_hdf5'], '/'.join(h5_song[2:5]), h5_song + '.h5')
+def random_track_id_h5(self, f):
+    # http://stackoverflow.com/a/3540315
+    #
+    # The amazing Alex Martelli referencing the Resovoir Algorithm
+
+    line = next(f)
+    for num, replace in enumerate(f):
+        if random.randrange(num + 2): continue
+        line = replace
+    return line
+
+def metadata(track_id_h5):
+    path = os.path.join(PATHS['msd_hdf5'], '/'.join(track_id_h5[2:5]), track_id_h5 + '.h5')
 
     with h5py.File(path, 'r') as f:
         meta = f['metadata']['songs'][0]
@@ -14,5 +26,5 @@ def metadata(h5_song):
     return {
         'artist': meta['artist_name'],
         'title': meta['title'],
-        'track_id': meta['track_7digitalid']
+        'track_id_7digital': meta['track_7digitalid']
     }

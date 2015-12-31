@@ -8,5 +8,5 @@ py7D.api_settings.country   = keys['KEY_7DIGITAL_COUNTRY']
 
 
 
-def get_preview_track(track_id):
-    return py7D.preview_url(track_id)
+def get_preview_track(track_id_7digital, file_obj):
+    return py7D.preview_url(track_id_7digital)
