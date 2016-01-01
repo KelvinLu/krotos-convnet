@@ -56,17 +56,16 @@ class LastFMTagsDB(object):
 
         report("Last.fm database connected.")
 
-    def get_tag_human(self, track_id):
-        tags, count = self.get_tag_ids(track_id)
-        return [row[1] for row in self._tag_subset if row[0] in tags], count
+    def get_tag_data(self, track_id):
+        tags = self.get_tag_ids(track_id)
 
-    def get_tag_vector(self, track_id):
-        tags, count = self.get_tag_ids(track_id)
-        return np.vectorize(lambda x: 1.0 if x in tags else 0.0)(self._tag_subset_ids), count
+        return (np.vectorize(lambda x: 1.0 if x in tags else 0.0)(self._tag_subset_ids),
+            [row[1] for row in self._tag_subset if row[0] in tags],
+            len(tags)
+        )
 
     def get_tag_ids(self, track_id):
         res = self._execute(queries.all_tags(track_id=track_id))
         data = res.fetchall()
 
-        tags = np.intersect1d([row[0] for row in data], self._tag_subset_ids)
-        return tags, len(tags)
+        return np.intersect1d([row[0] for row in data], self._tag_subset_ids)

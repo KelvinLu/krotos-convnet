@@ -1,7 +1,7 @@
 import numpy as np
 
 from krotos.msd.utils import msd_hdf5
-from krotos.msd.processing import make_minibatch, examine_minibatch
+from krotos.msd.processing import make_minibatch
 from krotos.debug import report
 
 
@@ -35,8 +35,15 @@ class Dataset(object):
     def _sample_training_ind(self):
         return np.random.choice(self._training_inds)
 
-    def minibatch(self, n=10):
-        return make_minibatch(self, n)
+    def minibatch(self, n=10, trim=True):
+        batch = make_minibatch(self, n)
+        if trim:
+            for s in batch: s[-1].close()
+            batch = [(s[0], s[1]) for s in batch]
 
-    def human_examine(self, n=10):
-        return examine_minibatch(self, n)
+
+        assert(trim)
+
+        print batch
+
+        return batch

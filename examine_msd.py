@@ -16,10 +16,10 @@ from krotos.msd import Dataset
 
 
 d = Dataset()
-batch = d.human_examine(5)
+batch = d.minibatch(5, trim=False)
 
-for s, tags, mp3, title, artist_name in batch:
-    p = subprocess.Popen(['vlc', mp3.name])
+for s, _, title, artist_name, tags, _, f in batch:
+    p = subprocess.Popen(['vlc', f.name])
 
     plt.clf()
     librosa.display.specshow(librosa.logamplitude(s, ref_power=np.max), x_axis='time', y_axis='mel')
@@ -30,4 +30,4 @@ for s, tags, mp3, title, artist_name in batch:
     plt.show()
 
     p.kill()
-    mp3.close()
+    f.close()
