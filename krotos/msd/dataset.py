@@ -1,7 +1,7 @@
 import numpy as np
 
 from krotos.msd.utils import msd_hdf5
-from krotos.msd.processing import make_minibatch
+from krotos.msd.processing import make_minibatch, examine_minibatch
 from krotos.debug import report
 
 
@@ -21,6 +21,8 @@ class Dataset(object):
 
         self._split_dataset(training_split, validation_split, testing_split)
 
+        report("Million Dollar Dataset summary loaded.")
+
     def _split_dataset(self, training_split, validation_split, testing_split):
         shuffle = np.random.permutation(self._sample_size)
         total = float(training_split + validation_split + testing_split)
@@ -30,8 +32,11 @@ class Dataset(object):
         self._validation_inds   = shuffle[cut_1:cut_2]
         self._testing_inds      = shuffle[cut_2:]
 
-    def _sample_training_ind(self, n=1):
-        return np.random.choice(self._training_inds, size=n, replace=False)
+    def _sample_training_ind(self):
+        return np.random.choice(self._training_inds)
 
     def minibatch(self, n=10):
         return make_minibatch(self, n)
+
+    def human_examine(self, n=10):
+        return examine_minibatch(self, n)
