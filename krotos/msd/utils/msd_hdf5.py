@@ -1,31 +1,19 @@
-import os
 import h5py
-import random
+import numpy as np
 
 from krotos.paths import PATHS
+from krotos.debug import report
 
 
 
-def random_track_id_h5(f):
-    # http://stackoverflow.com/a/3540315
-    #
-    # The amazing Alex Martelli referencing the Resovoir Algorithm
+SUMMARY_HANDLE = h5py.File(PATHS['msd_summary_h5'], 'r')
 
-    f.seek(0)
-    line = next(f)
-    for num, replace in enumerate(f):
-        if random.randrange(num + 2): continue
-        line = replace
-    return line.split("<SEP>", 1)[0]
+# inds must be sorted for the HDF5 reader
+def get_summary(inds):
+    track_id = SUMMARY_HANDLE['analysis']['songs'][inds]['track_id']
+    metadata = SUMMARY_HANDLE['metadata']['songs'][inds][['track_7digitalid', 'title', 'artist_name']]
 
-def metadata(track_id_h5):
-    path = os.path.join(PATHS['msd_hdf5'], '/'.join(track_id_h5[2:5]), track_id_h5 + '.h5')
+    return track_id, metadata
 
-    with h5py.File(path, 'r') as f:
-        meta = f['metadata']['songs'][0]
-
-    return {
-        'artist': meta['artist_name'],
-        'title': meta['title'],
-        'track_id_7digital': meta['track_7digitalid']
-    }
+def sample_size():
+    return SUMMARY_HANDLE['analysis']['songs'].size

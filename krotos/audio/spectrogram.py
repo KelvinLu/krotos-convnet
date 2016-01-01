@@ -17,4 +17,4 @@ def mel_spectrogram(audio_path):
     )
     s = librosa.feature.melspectrogram(y, sr, n_mels=128, hop_length=512)
 
-    return s
+    return True, s
