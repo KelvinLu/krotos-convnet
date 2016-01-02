@@ -22,8 +22,8 @@ for s, tags, mp3_path in batch:
     p = subprocess.Popen(['vlc', mp3_path])
 
     plt.clf()
-    librosa.display.specshow(librosa.logamplitude(s, ref_power=np.max), x_axis='time', y_axis='mel')
-    plt.colorbar(format='%+2.0f dB')
+    librosa.display.specshow(s, x_axis='time', y_axis='mel')
+    plt.colorbar(format='%1.3f')
 
     plt.title(', '.join(tags) or 'No tags')
 

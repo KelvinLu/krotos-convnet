@@ -22,8 +22,8 @@ for s, _, title, artist_name, tags, _, f in batch:
     p = subprocess.Popen(['vlc', f.name])
 
     plt.clf()
-    librosa.display.specshow(librosa.logamplitude(s, ref_power=np.max), x_axis='time', y_axis='mel')
-    plt.colorbar(format='%+2.0f dB')
+    librosa.display.specshow(s, x_axis='time', y_axis='mel')
+    plt.colorbar(format='%1.3f')
 
     plt.title(artist_name.encode('utf-8') + ' - ' + title.encode('utf-8') + ' | ' + ', '.join(tags))
 
