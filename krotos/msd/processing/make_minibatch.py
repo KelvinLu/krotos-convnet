@@ -36,7 +36,7 @@ def make_minibatch(dataset, n=10):
 def make_sample_tuples(dataset, n):
     results = []
 
-    # Get Last.fm tags for a track.
+    # Get metadata and Last.fm tags for a track.
     # Do sqlite database accesses single-threaded.
     while len(results) < n:
         sample_ind          = dataset._sample_training_ind()
@@ -44,6 +44,8 @@ def make_sample_tuples(dataset, n):
 
         track_id                                = track_id[0]
         track_id_7digital, title, artist_name   = metadata[0]
+
+        if not track_id_7digital: continue
 
         tag_vector, tag_names, num_tags = lastfm.get_tag_data(track_id)
         if not num_tags: continue
