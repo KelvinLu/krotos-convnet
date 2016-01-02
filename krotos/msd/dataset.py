@@ -41,9 +41,4 @@ class Dataset(object):
             for s in batch: s[-1].close()
             batch = [(s[0], s[1]) for s in batch]
 
-
-        assert(trim)
-
-        print batch
-
         return batch
