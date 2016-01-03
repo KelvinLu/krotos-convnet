@@ -35,6 +35,9 @@ class Dataset(object):
     def _sample_training_ind(self):
         return np.random.choice(self._training_inds)
 
+    # TODO: add kwarg switch to create samples with Echo Nest latent feature
+    # vectors (when that part is ready)
+
     def minibatch(self, n=10, trim=True):
         batch = make_minibatch(self, n)
         if trim:

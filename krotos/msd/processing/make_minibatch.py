@@ -11,6 +11,11 @@ WORKERS = 4
 
 
 
+# TODO: refactor code minibatch generation to create samples for Echo Nest
+# latent feature vectors (when that part is ready)
+
+
+
 def make_minibatch(dataset, n=10):
     remainder   = n
     results     = []

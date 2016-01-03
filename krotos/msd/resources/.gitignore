@@ -1,3 +1,4 @@
+*.txt
 *.db
 *.h5
 *.pickle
