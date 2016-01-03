@@ -13,7 +13,7 @@ We aim to build a CNN (and the surrounding data infrastructure) that will learn 
 
 We will then fine tune our CNN model to predict latent feature vectors derived from the [Echo Nest Taste Profile](http://labrosa.ee.columbia.edu/millionsong/tasteprofile). This project will also provide an implementation to perform the collaborative filtering task that informs the audio's latent features.
 
-In the far future, we might construct a web service to gauge musical compatibility for SoundCloud users, based on their likes. The cold-start problem described by Van de Oord et al. and Dieleman is very related to the nature of the SoundCloud platform. It would be hard to apply collaborative filtering findings, informed by "mainstream music", to "indie" artists that release their lesser-known music on SoundCloud.
+In the far future, we might construct a web service to gauge musical compatibility for SoundCloud users, based on their likes. The cold-start problem described by Van de Oord et al. and Dieleman is very related to the nature of the SoundCloud platform. It would be hard to apply collaborative filtering findings, informed by "mainstream music", to "indie" artists that release their lesser-known music on SoundCloud without some form of content-based learning. ... unless you're in the industry and have loads of metadata, anyway.
 
 > ... I've always wanted to say "check out my mixtape, fam" seriously.
 
