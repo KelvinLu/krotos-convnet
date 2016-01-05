@@ -25,7 +25,7 @@ for s, _, title, artist_name, tags, _, f in batch:
     librosa.display.specshow(s, x_axis='time', y_axis='mel')
     plt.colorbar(format='%1.3f')
 
-    plt.title(artist_name.encode('utf-8') + ' - ' + title.encode('utf-8') + ' | ' + ', '.join(tags))
+    plt.title(artist_name.encode('utf-8', 'ignore') + ' - ' + title.encode('utf-8', 'ignore') + ' | ' + ', '.join(tags))
 
     plt.show()
 

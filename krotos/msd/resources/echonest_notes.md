@@ -17,7 +17,11 @@ This takes some time to do, you might want to watch an episode of your favorite 
 
 
 
-# Reducing the song space
+# Reducing the dataset
+
+If you don't feel like performing operations on 1,000,000-by-40 dense matrices or 1,000,000-by-1,000,000 diagonal matrices, you can reduce the dataset down to the ~20K users and ~10K songs that [Dieleman et al.](http://papers.nips.cc/paper/5004-deep-content-based-music-recommendation.pdf) does in his work in Section 5.1. Feel free to skip to **We're not done yet!** below to retain the full dataset.
+
+### Reducing the song space
 
 Next, we create an intermediate table of the 10,000 most **popular** (_not the same as most played_) songs. We do this for speeding up computation of the latent factors, justified by the popularity-bias noted in [Section 3.2 & 5.4 of McFee et al.](http://eceweb.ucsd.edu/~gert/papers/msdc.pdf)
 
@@ -102,3 +106,46 @@ We can just `drop table subset_plays` and repeat if we are unsatisfied with our 
 In our case, we ended up with 19,965 distinct users and 7,358 distinct songs.
 
 Our latent factor vectors are now computationally less expensive, at the cost of covering a smaller song space (leaving out information of tail-end songs) and providing less trainable data for learning content features in our CNN.
+
+
+
+
+
+# We're not done yet!
+
+> If you are retaining the full dataset, the `subset_plays` references below should just be `plays` table.
+
+Before we get started, now's a good time to `VACCUM` our database up. If you ended up doing a lot of data wrestling, it might benefit you to defragment your database file for the sake of performance. It'll take a while, so load up that second episode of anime (it took me ~15 minutes).
+
+In order to help our collaborative filtering implementation, we need to build a several things:
+
+- a mapping from a matrix index/position to an Echo Nest User ID
+- a mapping from a matrix index/position to an Echo Nest Song ID
+- storage for computed latent feature vectors
+
+We can build tables to represent each user/song's index as their implicit `ROWID` and store serialized `numpy` latent feature vectors in a `blob` column.
+
+We may also wish to enforce `unique` on the user/song IDs to improve searching performance. The tables will also be used to translate between `numpy` indices and IDs.
+
+```
+create table vector_users(user varchar(40) unique, x blob default '');
+
+create table vector_songs(song varchar(18) unique, y blob default '');
+
+insert into vector_users (user, x)
+select distinct user, ''
+from subset_plays;
+
+insert into vector_songs (song, y)
+select distinct song, ''
+from subset_plays;
+```
+
+> The `x`, `y` notation follows that of [Koren et al.](http://yifanhu.net/PUB/cf.pdf)
+
+While we're at it, we'll add database indexes to `subset_plays`'s user and song IDs as well.
+
+```
+create index subset_plays_user_idx on subset_plays (user);
+create index subset_plays_song_idx on subset_plays (song);
+```
