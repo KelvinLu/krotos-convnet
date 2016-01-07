@@ -18,9 +18,10 @@ EPSILON = 1e6
 
 mkdir_path('msd_echonest_latent')
 PICKLE_PATHS = {
-    'X':    os.path.join(PATHS['msd_echonest_latent'], 'X.pickle'),
-    'Y':    os.path.join(PATHS['msd_echonest_latent'], 'Y.pickle'),
-    'r':    os.path.join(PATHS['msd_echonest_latent'], 'r.pickle'),
+    'X':        os.path.join(PATHS['msd_echonest_latent'], 'X.pickle'),
+    'Y':        os.path.join(PATHS['msd_echonest_latent'], 'Y.pickle'),
+    'r':        os.path.join(PATHS['msd_echonest_latent'], 'r.pickle'),
+    'progress': os.path.join(PATHS['msd_echonest_latent'], 'progress.pickle'),
 }
 
 
@@ -70,9 +71,9 @@ class LatentFeaturesALS(object):
         if self.Y is None:
             self.Y = np.random.rand(self.n, self.f)
 
-    def _save_latents(self):
-        self._save(PICKLE_PATHS['X'], self.X)
-        self._save(PICKLE_PATHS['Y'], self.Y)
+    def _save_latents(self, mtx):
+        if mtx == 'X': self._save(PICKLE_PATHS['X'], self.X)
+        if mtx == 'Y': self._save(PICKLE_PATHS['Y'], self.Y)
 
     def _load_plays_matrix(self, mode='COO'):
         # Load this data to generate confidence matrices and prediction vectors
@@ -115,49 +116,51 @@ class LatentFeaturesALS(object):
         report("COO mode: Extraction done, creating play count matrix.")
         return sparse.coo_matrix((playcount, (user, song)), shape=(self.m, self.n))
 
-    def _r_vector(self, u=None, i=None):
-        if u is not None:
-            return self.r.getrow(u)
-        elif i is not None:
-            return self.r_T.getrow(i)
-        else:
-            raise ValueError("Need user index u or song index i in kwargs.")
+    def _prediction(self, d, indptr_start, indptr_stop, inds):
+        nnz             = indptr_stop - indptr_start
+        data            = np.ones(nnz)
+        indptr          = np.array([0, nnz])
+        indices         = inds
 
-    def _prediction(self, u=None, i=None):
-        v       = self._r_vector(u=u, i=i).copy()
-        v.data  = np.ones(v.nnz)
+        return sparse.csr_matrix((data, indices, indptr), shape=(1, d))
 
-        return v
+    def _confidence(self, d, indptr_start, indptr_stop, inds):
+        # Avoid initializing a CSR matrix when referencing a row of self.r/r_T.
+        # Saves ~1.19 ms/call
+        r_vector = self.r.data[indptr_start:indptr_stop]
 
-    def _confidence(self, u=None, i=None):
-        # We note that C_minus_eye has a sparse diagonal
-        r       = self._r_vector(u=u, i=i)
-        d       = r.shape[1]
-        inds    = r.nonzero()[1]
-
-        c_minus_one = ALPHA * np.log(1 + EPSILON * r.data)
+        c_minus_one = ALPHA * np.log(1 + EPSILON * r_vector)
+        # C_minus_eye has a sparse diagonal, we construct it with a COO matrix
         C_minus_eye = sparse.coo_matrix((c_minus_one, (inds, inds)), shape=(d, d))
-
         # Faster than C = sparse.identity(d); C.data[0][inds] += c_minus_one
         C = sparse.coo_matrix((c_minus_one + 1, (inds, inds)), shape=(d, d))
 
         return C.tocsr(), C_minus_eye.tocsr()
 
-    def _update_X(self):
+    def _update_X(self, start_u=0, end_u=None):
+        end         = min(end_u or self.m, self.m)
+        batch_size  = end - start_u
+
         report("Updating matrix X of user latent feature vectors.")
         Y_T                                     = self.Y.T
         Y_T_Y_regularized                       = np.dot(Y_T, self.Y)
         # Just as fast as the .ravel() trick and fill_diagonal() methods.
         Y_T_Y_regularized.flat[::self.m + 1]   += LAMBDA
-
-        for u in xrange(self.m):
+        for u in xrange(start_u, end):
             self._update_X_u(u, Y_T, Y_T_Y_regularized)
-            report("{:7.3f}% of X updated...".format(u * 100.0 / self.m), sameline=True)
+
+            if u % 10 == 0:
+                report("{0:7.3f}% of X updated... ({1:.3f}% of batch complete)".format(u * 100.0 / self.m, (u - start_u) * 100.0 / batch_size), sameline=True)
 
         report_newline()
 
     def _update_X_u(self, u, Y_T, Y_T_Y_regularized):
-        C_u, C_u_minus_eye = self._confidence(u=u)
+        d               = self.n
+        indptr_start    = self.r.indptr[u]
+        indptr_stop     = self.r.indptr[u+1]
+        inds            = self.r.indices[indptr_start:indptr_stop]
+
+        C_u, C_u_minus_eye = self._confidence(d, indptr_start, indptr_stop, inds)
 
         inner = C_u_minus_eye.dot(self.Y)
         inner = np.dot(Y_T, inner) + Y_T_Y_regularized
@@ -165,27 +168,37 @@ class LatentFeaturesALS(object):
         left = np.linalg.inv(inner)
         left_T = np.dot(self.Y, left.T)
 
-        right_T = self._prediction(u=u).dot(C_u)
+        right_T = self._prediction(d, indptr_start, indptr_stop, inds).dot(C_u)
 
         X_u = right_T.dot(left_T)
 
         self.X[u, :] = X_u
 
-    def _update_Y(self):
+    def _update_Y(self, start_i=0, end_i=None):
+        end         = min(end_i or self.n, self.n)
+        batch_size  = end - start_i
+
         report("Updating matrix Y of song latent feature vectors.")
         X_T                                     = self.X.T
         X_T_X_regularized                       = np.dot(X_T, self.X)
         # Just as fast as the .ravel() trick and fill_diagonal() methods.
         X_T_X_regularized.flat[::self.n + 1]   += LAMBDA
 
-        for i in xrange(self.n):
+        for i in xrange(start_i, end):
             self._update_Y_i(i, X_T, X_T_X_regularized)
-            report("{:7.3f}% of Y updated...".format(i * 100.0 / self.n), sameline=True)
+
+            if u % 10 == 0:
+                report("{0:7.3f}% of Y updated... ({1:.3f}% of batch complete)".format(i * 100.0 / self.n, (i - start_i) * 100.0 / batch_size), sameline=True)
 
         report_newline()
 
     def _update_Y_i(self, i, X_T, X_T_X_regularized):
-        C_i, C_i_minus_eye = self._confidence(i=i)
+        d               = self.m
+        indptr_start    = self.r_T.indptr[i]
+        indptr_stop     = self.r_T.indptr[i+1]
+        inds            = self.r_T.indices[indptr_start:indptr_stop]
+
+        C_i, C_i_minus_eye = self._confidence(d, indptr_start, indptr_stop, inds)
 
         inner = C_i_minus_eye.dot(self.X)
         inner = np.dot(X_T, inner) + X_T_X_regularized
@@ -193,8 +206,49 @@ class LatentFeaturesALS(object):
         left = np.linalg.inv(inner)
         left_T = np.dot(self.X, left.T)
 
-        right_T = self._prediction(i=i).dot(C_i)
+        right_T = self._prediction(d, indptr_start, indptr_stop, inds).dot(C_i)
 
         Y_i = right_T.dot(left_T)
 
         self.Y[i, :] = Y_i
+
+    def _load_progress(self):
+        self.progress = self._load(PICKLE_PATHS['progress']) or {
+            'rnd':  0,
+            'mtx':  'X',
+            'idx':  0
+        }
+
+    def _save_progress(self, **kwargs):
+        self.progress.update(kwargs)
+        self._save(PICKLE_PATHS['progress'], self.progress)
+
+    def minimize(self, rounds=1, batch_size=100000):
+        self._load_progress()
+
+        for rnd in xrange(self.progress['rnd'], rounds):
+            report("Round {} of minimization...".format(rnd + 1))
+
+            if self.progress['mtx'] == 'X':
+                while(self.progress['idx'] < self.m):
+                    self._update_X(
+                        start_u = self.progress['idx'],
+                        end_u   = self.progress['idx'] + batch_size
+                    )
+                    self._save_latents('X')
+                    self._save_progress(idx=(self.progress['idx'] + batch_size))
+
+                self._save_progress(mtx='Y', idx=0)
+
+            if self.progress['mtx'] == 'Y':
+                while(self.progress['idx'] < self.n):
+                    self._update_Y(
+                        start_i = self.progress['idx'],
+                        end_i   = self.progress['idx'] + batch_size
+                    )
+                    self._save_latents('Y')
+                    self._save_progress(idx=(self.progress['idx'] + batch_size))
+
+                self._save_progress(mtx='X', idx=0)
+
+            self._save_progress(rnd=(rnd + 1))

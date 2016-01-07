@@ -58,4 +58,5 @@ target/
 
 # ad hoc scripting
 ad_hoc_test.py
-pycallgraph.png
+profile*.png
+profile*.txt
