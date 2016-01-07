@@ -58,5 +58,7 @@ target/
 
 # ad hoc scripting
 ad_hoc_test.py
+gprof2dot.py
 profile*.png
 profile*.txt
+profile*.pstats

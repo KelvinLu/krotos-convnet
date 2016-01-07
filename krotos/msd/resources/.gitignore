@@ -2,3 +2,5 @@
 *.db
 *.h5
 *.pickle
+*.npz
+*.npy
