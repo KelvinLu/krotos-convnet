@@ -23,13 +23,15 @@ class EchoNestTasteDB(DBConn):
 
         cls._initialized = True
 
-    def __init__(self):
+    def __init__(self, subset=True):
         if not self._initialized:
             self._initialize()
 
+        self.subset = subset
+
     def get_size(self):
-        m = self._execute(echonest.user_count()).fetchall()[0][0]
-        n = self._execute(echonest.song_count()).fetchall()[0][0]
+        m = self._execute(echonest.user_count(subset=self.subset)).fetchall()[0][0]
+        n = self._execute(echonest.song_count(subset=self.subset)).fetchall()[0][0]
 
         return m, n
 
@@ -38,9 +40,9 @@ class EchoNestTasteDB(DBConn):
         # We will stick to the 0-based convention in this scope and expect
         # query function scopes to be 1-based.
 
-        total = self._execute(echonest.triplet_count()).fetchall()[0][0]
+        total = self._execute(echonest.triplet_count(subset=self.subset)).fetchall()[0][0]
 
-        data = self._execute(echonest.get_triplet())
+        data = self._execute(echonest.get_triplet(subset=self.subset))
 
         result = np.ndarray(shape=(0,3))
 
@@ -57,7 +59,7 @@ class EchoNestTasteDB(DBConn):
         # We will stick to the 0-based convention in this scope and expect
         # query function scopes to be 1-based.
 
-        data = self._execute(echonest.get_song_plays_by_user(user_rowid=(u + 1)))
+        data = self._execute(echonest.get_song_plays_by_user(subset=self.subset, user_rowid=(u + 1)))
 
         song_col_idxs, counts = zip(*data.fetchall())
 

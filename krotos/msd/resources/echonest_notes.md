@@ -19,7 +19,7 @@ This takes some time to do, you might want to watch an episode of your favorite 
 
 # Reducing the dataset
 
-If you don't feel like performing operations on 1,000,000-by-40 dense matrices or 1,000,000-by-1,000,000 diagonal matrices, you can reduce the dataset down to the ~20K users and ~10K songs that [Dieleman et al.](http://papers.nips.cc/paper/5004-deep-content-based-music-recommendation.pdf) does in his work in Section 5.1. Feel free to skip to **We're not done yet!** below to retain the full dataset.
+If you don't feel like performing operations on 1,000,000-by-40 dense matrices, you can reduce the dataset down to the ~20K users and ~10K songs that [Dieleman et al.](http://papers.nips.cc/paper/5004-deep-content-based-music-recommendation.pdf) does in his work in Section 5.1. Otherwise, feel free to skip to the section **We're not done yet!** below to retain the full dataset.
 
 ### Reducing the song space
 
@@ -53,7 +53,7 @@ create table subset_plays as
 select plays.user, popular_songs.song, plays.count
 from plays, popular_songs
 where plays.song = popular_songs.song
-and (random() % 600) = 0;
+and (random() % <modulo>) = 0;
 ```
 
 And from the following,
@@ -81,7 +81,7 @@ In practice, this method gives varying results as listed below.
 > The measurement took under 20 seconds to do.
 > ```
 select count(distinct user), count(distinct song)
-from popular_plays where (random() % modulo) = 0;
+from popular_plays where (random() % <modulo>) = 0;
 ```
 
 Subsequent measurements with a modulo of 1,300:
@@ -97,7 +97,7 @@ We sample our subset by doing the following. It took me ~30 seconds.
 ```
 create table subset_plays as
 select * from popular_plays
-where (random() % 1300) = 0;
+where (random() % <modulo>) = 0;
 ```
 > _"let the samples hit the floor, let the samples hit the floor"_
 
@@ -113,9 +113,9 @@ Our latent factor vectors are now computationally less expensive, at the cost of
 
 # We're not done yet!
 
-> If you are retaining the full dataset, the `subset_plays` references below should just be `plays` table.
+> If you are retaining the full dataset, you can ignore the 'subset_' prefixes in the following table names.
 
-Before we get started, now's a good time to `VACCUM` our database up. If you ended up doing a lot of data wrestling, it might benefit you to defragment your database file for the sake of performance. It'll take a while, so load up that second episode of anime (it took me ~15 minutes).
+Before we get started, now's a good time to `VACCUM` our database up. If you ended up doing a lot of data wrestling, it might benefit you to defragment your database file for the sake of performance. It'll take a while, so load up that second episode of anime (it took me ~15-25 minutes).
 
 In order to help our collaborative filtering implementation, we need to build a several things:
 
@@ -128,16 +128,16 @@ We can build tables to represent each user/song's index as their implicit `ROWID
 We may also wish to enforce `unique` on the user/song IDs to improve searching performance. The tables will also be used to translate between `numpy` indices and IDs.
 
 ```
-create table vector_users(user varchar(40) unique, x blob default '');
+create table subset_vector_users(user varchar(40) unique);
 
-create table vector_songs(song varchar(18) unique, y blob default '');
+create table subset_vector_songs(song varchar(18) unique);
 
-insert into vector_users (user, x)
-select distinct user, ''
+insert into subset_vector_users (user)
+select distinct user
 from subset_plays;
 
-insert into vector_songs (song, y)
-select distinct song, ''
+insert into subset_vector_songs (song)
+select distinct song
 from subset_plays;
 ```
 

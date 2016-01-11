@@ -16,20 +16,23 @@ LAMBDA  = 0.001
 ALPHA   = 2.0
 EPSILON = 1e6
 
+SUBSET = True
+
 mkdir_path('msd_echonest_latent')
-STORE_PATHS = {
-    'shape':    os.path.join(PATHS['msd_echonest_latent'], 'shape.pickle'),
-    'X':        os.path.join(PATHS['msd_echonest_latent'], 'X.npy'),
-    'Y':        os.path.join(PATHS['msd_echonest_latent'], 'Y.npy'),
-    'r':        os.path.join(PATHS['msd_echonest_latent'], 'r.npz'),
-    'progress': os.path.join(PATHS['msd_echonest_latent'], 'progress.pickle'),
+STORE_FILES = {
+    'shape':    'shape.pickle',
+    'X':        'X.npy',
+    'Y':        'Y.npy',
+    'r':        'r.npz',
+    'progress': 'progress.pickle'
 }
+GET_STORE_PATH = lambda x: os.path.join(PATHS['msd_echonest_latent'], ('subset_' if SUBSET else '') + STORE_FILES[x])
 
 
 
 class LatentFeaturesALS(object):
     def __init__(self):
-        self._echonest = EchoNestTasteDB()
+        self._echonest = EchoNestTasteDB(subset=SUBSET)
         report("Echo Nest database connected.")
 
         self._get_hyperparams()
@@ -43,10 +46,10 @@ class LatentFeaturesALS(object):
     def _get_hyperparams(self):
         # m: the number of users
         # n: the number of songs
-        dims = self._load(STORE_PATHS['shape'])
+        dims = self._load(GET_STORE_PATH('shape'))
         if dims is None:
             dims = self._echonest.get_size()
-            self._save(STORE_PATHS['shape'], dims)
+            self._save(GET_STORE_PATH('shape'), dims)
 
         self.m, self.n = dims
 
@@ -85,33 +88,33 @@ class LatentFeaturesALS(object):
 
     def _load_latents(self):
         # X: m-by-f matrix of user latent feature row vectors
-        self.X = self._load(STORE_PATHS['X'], mode='ndarray')
+        self.X = self._load(GET_STORE_PATH('X'), mode='ndarray')
 
         if self.X is None:
             self.X = np.random.rand(self.m, self.f)
 
         # Y: n-by-f matrix of song latent feature row vectors
-        self.Y = self._load(STORE_PATHS['Y'], mode='ndarray')
+        self.Y = self._load(GET_STORE_PATH('Y'), mode='ndarray')
 
         if self.Y is None:
             self.Y = np.random.rand(self.n, self.f)
 
     def _save_latents(self, mtx):
-        if mtx == 'X': self._save(STORE_PATHS['X'], self.X, mode='ndarray')
-        if mtx == 'Y': self._save(STORE_PATHS['Y'], self.Y, mode='ndarray')
+        if mtx == 'X': self._save(GET_STORE_PATH('X'), self.X, mode='ndarray')
+        if mtx == 'Y': self._save(GET_STORE_PATH('Y'), self.Y, mode='ndarray')
 
     def _load_plays_matrix(self, mode='COO'):
         # Load this data to generate confidence matrices and prediction vectors
         # in later computation
 
-        self.r = self._load(STORE_PATHS['r'], mode='CSR')
+        self.r = self._load(GET_STORE_PATH('r'), mode='CSR')
 
         if self.r is None:
             if mode == 'LIL':
                 self.r = self._load_plays_matrix_LIL().tocsr()
             if mode == 'COO':
                 self.r = self._load_plays_matrix_COO().tocsr()
-            self._save(STORE_PATHS['r'], self.r, mode='CSR')
+            self._save(GET_STORE_PATH('r'), self.r, mode='CSR')
 
         self.r_T = self.r.transpose(copy=False).tocsr()
 
@@ -172,7 +175,7 @@ class LatentFeaturesALS(object):
             self._update_X_u(u, Y_T, Y_T_Y_regularized)
 
             if u % 10 == 0:
-                report("{0:7.3f}% of X updated... ({1:.3f}% of batch complete)".format((u + start_u) * 100.0 / self.m, (u - start_u) * 100.0 / batch_size), sameline=True)
+                report("{0:7.3f}% of X updated... ({1:.3f}% of batch complete)".format(u * 100.0 / self.m, (u - start_u) * 100.0 / batch_size), sameline=True)
 
         report_newline()
 
@@ -209,8 +212,8 @@ class LatentFeaturesALS(object):
         for i in xrange(start_i, end):
             self._update_Y_i(i, X_T, X_T_X_regularized)
 
-            if u % 10 == 0:
-                report("{0:7.3f}% of Y updated... ({1:.3f}% of batch complete)".format((i + start_i) * 100.0 / self.n, (i - start_i) * 100.0 / batch_size), sameline=True)
+            if i % 10 == 0:
+                report("{0:7.3f}% of Y updated... ({1:.3f}% of batch complete)".format(i * 100.0 / self.n, (i - start_i) * 100.0 / batch_size), sameline=True)
 
         report_newline()
 
@@ -235,7 +238,7 @@ class LatentFeaturesALS(object):
         self.Y[i, :] = Y_i
 
     def _load_progress(self):
-        self.progress = self._load(STORE_PATHS['progress']) or {
+        self.progress = self._load(GET_STORE_PATH('progress')) or {
             'rnd':  0,
             'mtx':  'X',
             'idx':  0
@@ -243,7 +246,7 @@ class LatentFeaturesALS(object):
 
     def _save_progress(self, **kwargs):
         self.progress.update(kwargs)
-        self._save(STORE_PATHS['progress'], self.progress)
+        self._save(GET_STORE_PATH('progress'), self.progress)
 
     def minimize(self, rounds=1, batch_size=20000):
         self._load_progress()
