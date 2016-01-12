@@ -4,6 +4,7 @@ import numpy as np
 from scipy import sparse
 
 from krotos.paths import PATHS, mkdir_path
+from krotos.utils import Singleton
 from krotos.msd.db.echonest import EchoNestTasteDB
 from krotos.exceptions import ParametersError
 from krotos.debug import report, report_newline
@@ -31,6 +32,8 @@ GET_STORE_PATH = lambda x: os.path.join(PATHS['msd_echonest_latent'], ('subset_'
 
 
 class LatentFeaturesALS(object):
+    __metaclass__ = Singleton
+
     def __init__(self):
         self._echonest = EchoNestTasteDB(subset=SUBSET)
         report("Echo Nest database connected.")
