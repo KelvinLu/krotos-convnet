@@ -31,7 +31,7 @@ GET_STORE_PATH = lambda x: os.path.join(PATHS['msd_echonest_latent'], ('subset_'
 
 
 
-class LatentFeaturesALS(object):
+class LatentFeatures(object):
     __metaclass__ = Singleton
 
     def __init__(self):
@@ -169,7 +169,6 @@ class LatentFeaturesALS(object):
         end         = min(end_u or self.m, self.m)
         batch_size  = end - start_u
 
-        report("Updating matrix X of user latent feature vectors.")
         Y_T                                     = self.Y.T
         Y_T_Y_regularized                       = np.dot(Y_T, self.Y)
         # Just as fast as the .ravel() trick and fill_diagonal() methods.
@@ -179,8 +178,6 @@ class LatentFeaturesALS(object):
 
             if u % 10 == 0:
                 report("{0:7.3f}% of X updated... ({1:.3f}% of batch complete)".format(u * 100.0 / self.m, (u - start_u) * 100.0 / batch_size), sameline=True)
-
-        report_newline()
 
     def _update_X_u(self, u, Y_T, Y_T_Y_regularized):
         d               = self.n
@@ -206,7 +203,6 @@ class LatentFeaturesALS(object):
         end         = min(end_i or self.n, self.n)
         batch_size  = end - start_i
 
-        report("Updating matrix Y of song latent feature vectors.")
         X_T                                     = self.X.T
         X_T_X_regularized                       = np.dot(X_T, self.X)
         # Just as fast as the .ravel() trick and fill_diagonal() methods.
@@ -217,8 +213,6 @@ class LatentFeaturesALS(object):
 
             if i % 10 == 0:
                 report("{0:7.3f}% of Y updated... ({1:.3f}% of batch complete)".format(i * 100.0 / self.n, (i - start_i) * 100.0 / batch_size), sameline=True)
-
-        report_newline()
 
     def _update_Y_i(self, i, X_T, X_T_X_regularized):
         d               = self.m
@@ -258,6 +252,7 @@ class LatentFeaturesALS(object):
             report("Round {} of minimization...".format(rnd + 1))
 
             if self.progress['mtx'] == 'X':
+                report("Updating matrix X of user latent feature vectors.")
                 while(self.progress['idx'] < self.m):
                     self._update_X(
                         start_u = self.progress['idx'],
@@ -266,9 +261,11 @@ class LatentFeaturesALS(object):
                     self._save_latents('X')
                     self._save_progress(idx=(self.progress['idx'] + batch_size))
 
+                report_newline()
                 self._save_progress(mtx='Y', idx=0)
 
             if self.progress['mtx'] == 'Y':
+                report("Updating matrix Y of song latent feature vectors.")
                 while(self.progress['idx'] < self.n):
                     self._update_Y(
                         start_i = self.progress['idx'],
@@ -277,6 +274,22 @@ class LatentFeaturesALS(object):
                     self._save_latents('Y')
                     self._save_progress(idx=(self.progress['idx'] + batch_size))
 
+                report_newline()
                 self._save_progress(mtx='X', idx=0)
 
             self._save_progress(rnd=(rnd + 1))
+
+    def get(self, track_id_echonest):
+        idx = self._echonest.get_track_idx(track_id_echonest)
+        return self.Y[idx, :], idx
+
+    def closest(self, features, n=5):
+        features_norm   = np.linalg.norm(features)
+        song_norm       = np.linalg.norm(self.Y, axis=1)
+
+        r = np.dot(self.Y, features) / (song_norm * features_norm)
+        closest_idx = np.argpartition(r, -n)[-n:]
+
+        track_ids_echonest, idxs = self._echonest.get_track_ids(closest_idx)
+
+        return track_ids_echonest, r[list(idxs)]

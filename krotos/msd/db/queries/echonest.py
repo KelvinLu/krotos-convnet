@@ -31,3 +31,13 @@ def get_song_plays_by_user(*args, **kwargs):
         WHERE   {vector_users}.ROWID = {user_rowid}
         AND     {vector_users}.user = {plays}.user
         AND     {vector_songs}.song = {plays}.song;""".format(**decorate_kwargs(kwargs))
+
+def get_track_idx(*args, **kwargs):
+    return """SELECT {vector_songs}.ROWID - 1
+        FROM    {vector_songs}
+        WHERE   {vector_songs}.song = '{track_id_echonest}';""".format(**decorate_kwargs(kwargs))
+
+def get_track_ids(*args, **kwargs):
+    return """SELECT {vector_songs}.song, {vector_songs}.ROWID - 1
+        FROM    {vector_songs}
+        WHERE   {vector_songs}.ROWID IN ({idxs_string});""".format(**decorate_kwargs(kwargs))

@@ -64,3 +64,12 @@ class EchoNestTasteDB(DBConn):
         song_col_idxs, counts = zip(*data.fetchall())
 
         return song_col_idxs, counts
+
+    def get_track_idx(self, track_id_echonest):
+        return self._execute(echonest.get_track_idx(subset=self.subset, track_id_echonest=track_id_echonest)).fetchall()[0][0]
+
+    def get_track_ids(self, idxs):
+        data = self._execute(echonest.get_track_ids(subset=self.subset, idxs_string=(', '.join(str(idx + 1) for idx in idxs)))).fetchall()
+        track_ids_echonest, idxs = zip(*data)
+
+        return track_ids_echonest, idxs
