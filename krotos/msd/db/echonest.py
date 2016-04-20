@@ -68,6 +68,9 @@ class EchoNestTasteDB(DBConn):
     def get_track_idx(self, track_id_echonest):
         return self._execute(echonest.get_track_idx(subset=self.subset, track_id_echonest=track_id_echonest)).fetchall()[0][0]
 
+    def get_track_id(self, idx):
+        return self._execute(echonest.get_track_id(subset=self.subset, idx=(idx + 1))).fetchall()[0][0]
+
     def get_track_ids(self, idxs):
         data = self._execute(echonest.get_track_ids(subset=self.subset, idxs_string=(', '.join(str(idx + 1) for idx in idxs)))).fetchall()
         track_ids_echonest, idxs = zip(*data)

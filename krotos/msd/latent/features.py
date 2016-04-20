@@ -11,9 +11,9 @@ from krotos.debug import report, report_newline
 
 
 
-LATENT_FEATURES = 40
+LATENT_FEATURES = 50
 
-LAMBDA  = 0.001
+LAMBDA  = 0.05
 ALPHA   = 2.0
 EPSILON = 1e6
 
@@ -95,12 +95,14 @@ class LatentFeatures(object):
 
         if self.X is None:
             self.X = np.random.rand(self.m, self.f)
+            self._save(GET_STORE_PATH('X'), self.X, mode='ndarray')
 
         # Y: n-by-f matrix of song latent feature row vectors
         self.Y = self._load(GET_STORE_PATH('Y'), mode='ndarray')
 
         if self.Y is None:
             self.Y = np.random.rand(self.n, self.f)
+            self._save(GET_STORE_PATH('Y'), self.Y, mode='ndarray')
 
     def _save_latents(self, mtx):
         if mtx == 'X': self._save(GET_STORE_PATH('X'), self.X, mode='ndarray')

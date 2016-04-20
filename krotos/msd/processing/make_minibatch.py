@@ -47,8 +47,8 @@ def make_sample_tuples(dataset, n):
         sample_ind          = dataset._sample_training_ind()
         track_id, metadata  = msd_hdf5.get_summary([sample_ind])
 
-        track_id                                = track_id[0]
-        track_id_7digital, title, artist_name   = metadata[0]
+        track_id                                                    = track_id[0]
+        track_id_7digital, track_id_echonest, title, artist_name    = metadata[0]
 
         if not track_id_7digital: continue
 
