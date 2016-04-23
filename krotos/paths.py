@@ -10,7 +10,8 @@ PATHS = {
     'msd_echonest_db':      os.path.join(ROOT_PATH, 'msd/resources/train_triplets.db'),
     'msd_echonest_latent':  os.path.join(ROOT_PATH, 'msd/resources/latent/'),
     'msd_lastfm_db':        os.path.join(ROOT_PATH, 'msd/resources/lastfm_tags.db'),
-    'tag_subset':           os.path.join(ROOT_PATH, 'msd/resources/tag_subset.pickle')
+    'tag_subset':           os.path.join(ROOT_PATH, 'msd/resources/tag_subset.pickle'),
+    'msd_dataset_split':    os.path.join(ROOT_PATH, 'msd/resources/split.pickle'),
 }
 
 def mkdir_path(key):
