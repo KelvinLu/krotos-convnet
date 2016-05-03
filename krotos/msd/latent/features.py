@@ -94,14 +94,14 @@ class LatentFeatures(object):
         self.X = self._load(GET_STORE_PATH('X'), mode='ndarray')
 
         if self.X is None:
-            self.X = np.random.rand(self.m, self.f)
+            self.X = np.random.rand(self.m, self.f) * 0.01
             self._save(GET_STORE_PATH('X'), self.X, mode='ndarray')
 
         # Y: n-by-f matrix of song latent feature row vectors
         self.Y = self._load(GET_STORE_PATH('Y'), mode='ndarray')
 
         if self.Y is None:
-            self.Y = np.random.rand(self.n, self.f)
+            self.Y = np.random.rand(self.n, self.f) * 0.01
             self._save(GET_STORE_PATH('Y'), self.Y, mode='ndarray')
 
     def _save_latents(self, mtx):
