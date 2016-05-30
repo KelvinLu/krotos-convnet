@@ -96,7 +96,7 @@ last_ind        = None
 
 def report_top(idx, n):
     report("\tGlobal closest songs:")
-    closest = sorted(zip(*lf.closest(lf.Y[idx], n=n)), key=lambda x: x[1], reverse=True)
+    closest = sorted(zip(*lf.closest(lf.Y[idx], n=n)), key=lambda x: x[1], reverse=False)
     for echonest_id, score in closest:
         report("\t\t{0:7.5}: {1}".format(score, song_labels[echonest_id]))
 
@@ -119,7 +119,7 @@ def onpick(event):
     if last_latent is not None:
         s = np.dot(last_latent, latents[ind]) / (np.linalg.norm(last_latent) * np.linalg.norm(latents[ind]))
         d = np.linalg.norm(last_latent - latents[ind])
-        report('Cosine similarity: {0: 7.5f}'.format(s))
+        report('Cosine distance:   {0: 7.5f}'.format(s))
         report('L2 distance:       {0: .5f}'.format(d))
     last_latent = latents[ind]
 

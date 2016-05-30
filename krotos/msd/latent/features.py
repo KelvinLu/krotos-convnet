@@ -245,4 +245,4 @@ class LatentFeatures(object):
 
         track_ids_echonest, idxs = self._echonest.get_track_ids(closest_idx)
 
-        return track_ids_echonest, r[list(idxs)]
+        return track_ids_echonest, (2 - (2 * r[list(idxs)]))
