@@ -236,7 +236,7 @@ class LatentFeatures(object):
         idx = self._echonest.get_track_idx(track_id_echonest)
         return self.Y[idx, :], idx
 
-    def closest(self, features, n=5):
+    def closest(self, features, n=5, ordered=False):
         features_norm   = np.linalg.norm(features)
         song_norm       = np.linalg.norm(self.Y, axis=1)
 
@@ -245,4 +245,9 @@ class LatentFeatures(object):
 
         track_ids_echonest, idxs = self._echonest.get_track_ids(closest_idx)
 
-        return track_ids_echonest, (2 - (2 * r[list(idxs)]))
+        results = track_ids_echonest, (2 - (2 * r[list(idxs)]))
+
+        if ordered:
+            results = zip(*sorted(zip(*results), key=lambda x: x[1], reverse=False))
+
+        return results
