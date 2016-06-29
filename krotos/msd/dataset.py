@@ -43,7 +43,7 @@ class Dataset(object):
     @classmethod
     def _load(cls):
         if not os.path.isfile(PATHS['msd_dataset_split']): return None
-        
+
         p = pickle.load(open(PATHS['msd_dataset_split'], 'rb'))
 
         cls._sample_size = p['sample_size']
@@ -91,13 +91,8 @@ class Dataset(object):
     def _sample_training_ind(self):
         return np.random.choice(self._training_inds)
 
-    # TODO: add kwarg switch to create samples with Echo Nest latent feature
-    # vectors (when that part is ready)
-
-    def minibatch(self, n=10, trim=True):
-        batch = make_minibatch(self, n)
-        if trim:
-            for s in batch: s[-1].close()
-            batch = [(s[0], s[1]) for s in batch]
-
-        return batch
+    # kwarg mapping may be one of the following:
+    #   'LATENT_FEATURES'
+    #   'LASTFM_TAGS'
+    def minibatch(self, n=10, mapping='LATENT_FEATURES', trim=True, audio_tempfile=False):
+        return make_minibatch(self, n, mapping=mapping, trim=trim, audio_tempfile=audio_tempfile)
