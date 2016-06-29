@@ -43,7 +43,7 @@ def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_t
 def output_latent_features_mapping(track_id_echonest):
     lf = LatentFeatures()
 
-    return lf.get(track_id_echonest), None
+    return lf.get(track_id_echonest)[0], None
 
 def output_lastfm_tags_mapping(track_id):
     tag_vector, tag_names, num_tags = lastfm.get_tag_data(track_id)
@@ -81,7 +81,9 @@ def select_samples(dataset, n, mapping, audio_tempfile=False):
         if mapping_output is None: continue
 
         samples.append({
+            'track_id':             track_id,
             'track_id_7digital':    track_id_7digital,
+            'track_id_echonest':    track_id_echonest,
             'title':                title,
             'artist_name':          artist_name,
             'mapping':              mapping_output,
