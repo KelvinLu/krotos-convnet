@@ -41,9 +41,11 @@ def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_t
     return results
 
 def output_latent_features_mapping(track_id_echonest):
-    lf = LatentFeatures()
+    latents = LatentFeatures().get(track_id_echonest)[0]
 
-    return lf.get(track_id_echonest)[0], None
+    if latents is None: return None, None
+
+    return latents, None
 
 def output_lastfm_tags_mapping(track_id):
     tag_vector, tag_names, num_tags = lastfm.get_tag_data(track_id)

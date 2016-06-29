@@ -234,6 +234,7 @@ class LatentFeatures(object):
 
     def get(self, track_id_echonest):
         idx = self._echonest.get_track_idx(track_id_echonest)
+        if idx == None: return None, None
         return self.Y[idx, :], idx
 
     def closest(self, features, n=5, ordered=False):
@@ -245,9 +246,9 @@ class LatentFeatures(object):
 
         track_ids_echonest, idxs = self._echonest.get_track_ids(closest_idx)
 
-        results = track_ids_echonest, (2 - (2 * r[list(idxs)]))
+        results = zip(track_ids_echonest, (2 - (2 * r[list(idxs)])))
 
         if ordered:
-            results = zip(*sorted(zip(*results), key=lambda x: x[1], reverse=False))
+            results = sorted(results, key=lambda x: x[1], reverse=False)
 
         return results

@@ -66,7 +66,9 @@ class EchoNestTasteDB(DBConn):
         return song_col_idxs, counts
 
     def get_track_idx(self, track_id_echonest):
-        return self._execute(echonest.get_track_idx(subset=self.subset, track_id_echonest=track_id_echonest)).fetchall()[0][0]
+        result_set = self._execute(echonest.get_track_idx(subset=self.subset, track_id_echonest=track_id_echonest)).fetchall()
+        if not len(result_set): return None
+        return result_set[0][0]
 
     def get_track_id(self, idx):
         return self._execute(echonest.get_track_id(subset=self.subset, idx=(idx + 1))).fetchall()[0][0]

@@ -12,18 +12,31 @@ import numpy as np
 import subprocess
 
 from krotos.msd import Dataset
+from krotos.msd.latent.features import LatentFeatures
 
 
 
 d = Dataset.instance(new=True)
-batch = d.minibatch(5, mapping='LASTFM_TAGS', trim=False, audio_tempfile=True)
+lf = LatentFeatures()
+batch = d.minibatch(5, mapping='LATENT_FEATURES', trim=False, audio_tempfile=True)
 
 for sample in batch:
     s           = sample['spectrogram_image']
+    features    = sample['mapping']
     title       = sample['title']
     artist_name = sample['artist_name']
-    tags        = sample['misc']['tag_names']
     f           = sample['tempfile']
+
+    closest = lf.closest(features, n=20, ordered=True)
+
+    print '\t' + artist_name + ' - ' + title
+    print '\t' + '---'
+
+    for track_id_echonest, distance in closest:
+        print '\t\t' + str(track_id_echonest) + '\t' + str(distance)
+
+    print '\t' + '==='
+
 
     p = subprocess.Popen(['vlc', f.name])
 
@@ -31,7 +44,7 @@ for sample in batch:
     librosa.display.specshow(s, x_axis='time', y_axis='mel')
     plt.colorbar(format='%1.3f')
 
-    plt.title(artist_name.encode('utf-8', 'ignore') + ' - ' + title.encode('utf-8', 'ignore') + ' | ' + ', '.join(tags))
+    plt.title(artist_name.encode('utf-8', 'ignore') + ' - ' + title.encode('utf-8', 'ignore'))
 
     plt.show()
 
