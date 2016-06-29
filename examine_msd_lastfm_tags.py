@@ -16,9 +16,15 @@ from krotos.msd import Dataset
 
 
 d = Dataset.instance(new=True)
-batch = d.minibatch(5, trim=False)
+batch = d.minibatch(5, mapping='LASTFM_TAGS', trim=False, audio_tempfile=True)
 
-for s, _, title, artist_name, tags, _, f in batch:
+for sample in batch:
+    s           = sample['spectrogram_image']
+    title       = sample['title']
+    artist_name = sample['artist_name']
+    tags        = sample['tag_names']
+    f           = sample['file']
+
     p = subprocess.Popen(['vlc', f.name])
 
     plt.clf()

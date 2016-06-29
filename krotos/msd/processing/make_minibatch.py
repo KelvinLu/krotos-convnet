@@ -1,7 +1,9 @@
 from multiprocessing.dummy import Pool as ThreadPool
 import tempfile
 
+from krotos.exceptions import ParametersError
 from krotos.msd.utils import lastfm, msd_hdf5, sevendigital
+from krotos.msd.latent.features import LatentFeatures
 from krotos.audio import spectrogram
 from krotos.debug import report, report_newline
 
@@ -10,13 +12,10 @@ from krotos.debug import report, report_newline
 WORKERS = 4
 
 
-
-# TODO: refactor code minibatch generation to create samples for Echo Nest
-# latent feature vectors (when that part is ready)
-
-
-
-def make_minibatch(dataset, n=10):
+# kwarg mapping may be one of the following:
+#   'LATENT_FEATURES'
+#   'LASTFM_TAGS'
+def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_tempfile=False):
     remainder   = n
     results     = []
 
@@ -25,7 +24,7 @@ def make_minibatch(dataset, n=10):
     # Workers should never be processing tracks such that more than
     # n tracks are downloaded from 7digital. We must conserve our API calls.
     while remainder > 0:
-        samples = make_sample_tuples(dataset, remainder)
+        samples = select_samples(dataset, remainder, mapping, audio_tempfile)
 
         interim = pool.map(process_sample, samples)
 
@@ -36,14 +35,32 @@ def make_minibatch(dataset, n=10):
 
     report_newline()
 
+    if trim:
+        results = [(sample['spectrogram_image'], sample['mapping']) for sample in results]
+
     return results
 
-def make_sample_tuples(dataset, n):
-    results = []
+def output_latent_features_mapping(track_id_echonest):
+    lf = LatentFeatures()
+
+    return lf.get(track_id_echonest), None
+
+def output_lastfm_tags_mapping(track_id):
+    tag_vector, tag_names, num_tags = lastfm.get_tag_data(track_id)
+
+    if not num_tags: return None, None
+
+    return tag_vector, {
+        'tag_names':    tag_names,
+        'num_tags':     num_tags,
+    }
+
+def select_samples(dataset, n, mapping, audio_tempfile=False):
+    samples = []
 
     # Get metadata and Last.fm tags for a track.
     # Do sqlite database accesses single-threaded.
-    while len(results) < n:
+    while len(samples) < n:
         sample_ind          = dataset._sample_training_ind()
         track_id, metadata  = msd_hdf5.get_summary([sample_ind])
 
@@ -52,24 +69,50 @@ def make_sample_tuples(dataset, n):
 
         if not track_id_7digital: continue
 
-        tag_vector, tag_names, num_tags = lastfm.get_tag_data(track_id)
-        if not num_tags: continue
+        mapping_output, metadata = None, None
 
-        results.append((track_id_7digital, title, artist_name, tag_vector, tag_names, num_tags))
+        if mapping == 'LATENT_FEATURES':
+            mapping_output, metadata = output_latent_features_mapping(track_id_echonest)
+        elif mapping == 'LASTFM_TAGS':
+            mapping_output, metadata = output_lastfm_tags_mapping(track_id)
+        else:
+            raise ParametersError('Bad value for parameter mapping')
 
-    return results
+        if mapping_output is None: continue
+
+        samples.append({
+            'track_id_7digital': track_id_7digital,
+            'title': title,
+            'artist_name': artist_name,
+            'mapping': mapping_output,
+            'metadata': metadata,
+            'tempfile': audio_tempfile,
+        })
+
+    return samples
 
 def process_sample(sample):
-    track_id_7digital, title, artist_name, tag_vector, tag_names, num_tags = sample
+    track_id_7digital = sample['track_id_7digital']
 
     f = tempfile.NamedTemporaryFile(suffix=".mp3")
     success, response = sevendigital.get_preview_track(track_id_7digital, f)
-    if not success: return None
+    if not success:
+        f.close()
+        return None
 
     f.flush()
     f.seek(0)
 
     success, spec = spectrogram.mel_spectrogram(f.name)
-    if not success: return None
+    if not success:
+        f.close()
+        return None
 
-    return (spec, tag_vector, title, artist_name, tag_names, num_tags, f)
+    sample['spectrogram_image'] = spec
+
+    if sample['tempfile'] == True:
+        sample['tempfile'] = f
+    else:
+        f.close()
+
+    return sample
