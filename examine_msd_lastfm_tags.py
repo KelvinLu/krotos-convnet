@@ -16,7 +16,7 @@ from krotos.msd import Dataset
 
 
 d = Dataset.instance(new=True)
-batch = d.minibatch(5, mapping='LASTFM_TAGS', trim=False, audio_tempfile=True)
+batch = d.minibatch(20, mapping='LASTFM_TAGS', trim=False, audio_tempfile=True)
 
 for sample in batch:
     s           = sample['spectrogram_image']

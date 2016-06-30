@@ -1,5 +1,6 @@
 from multiprocessing.dummy import Pool as ThreadPool
 import tempfile
+import time
 
 from krotos.exceptions import ParametersError
 from krotos.msd.utils import lastfm, msd_hdf5, sevendigital
@@ -21,6 +22,9 @@ def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_t
 
     pool    = ThreadPool(WORKERS)
 
+    time_start_world    = time.time()
+    time_start_proc     = time.clock()
+
     # Workers should never be processing tracks such that more than
     # n tracks are downloaded from 7digital. We must conserve our API calls.
     while remainder > 0:
@@ -31,9 +35,9 @@ def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_t
         results.extend([result for result in interim if result is not None])
         remainder = n - len(results)
 
-        report("Minibatch: {}/{} downloaded and processed.".format(n - remainder, n), sameline=True)
+        report("Minibatch: {}/{} samples downloaded and processed.".format(n - remainder, n), sameline=True)
 
-    report_newline()
+    report("Minibatch: {} samples downloaded and processed in {}s ({}s process time).".format(n, time.time() - time_start_world, time.clock() - time_start_proc), sameline=False)
 
     if trim:
         results = [(sample['spectrogram_image'], sample['mapping']) for sample in results]
