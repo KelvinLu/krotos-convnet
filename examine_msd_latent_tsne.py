@@ -96,7 +96,7 @@ last_ind        = None
 
 def report_top(idx, n):
     report("\tGlobal closest songs:")
-    closest = sorted(zip(*lf.closest(lf.Y[idx], n=n)), key=lambda x: x[1], reverse=False)
+    closest = lf.closest(lf.Y[idx], n=n, ordered=True)
     for echonest_id, score in closest:
         report("\t\t{0:7.5}: {1}".format(score, song_labels[echonest_id]))
 
