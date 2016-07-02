@@ -5,6 +5,7 @@ import os, subprocess
 import matplotlib.pyplot as plt
 from matplotlib.text import Annotation
 import numpy as np
+import scipy
 from sklearn.preprocessing import StandardScaler
 from sklearn.manifold import TSNE
 from sklearn.cluster import MiniBatchKMeans, AgglomerativeClustering
@@ -34,8 +35,9 @@ latents     = latents[sample_idxs, :]
 
 
 report("Performing t-SNE embedding...")
-model       = TSNE(n_components=2, method='barnes_hut')
-embedding   = model.fit_transform(latents)
+distance    = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(latents, metric='cosine'))
+model       = TSNE(n_components=2, method='barnes_hut', metric='precomputed')
+embedding   = model.fit_transform(distance)
 
 
 
@@ -68,7 +70,8 @@ with open(unique_tracks_path, 'r') as unique_tracks:
         _, song_id, artist, track = line.strip().split("<SEP>")
         song_labels[song_id] = (artist + ' - ' + track)
         i += 1
-        report("{0:7d} song labels...".format(i), sameline=True)
+        if (i % 5000 == 0):
+            report("{0:7d} song labels...".format(i), sameline=True)
 
     report_newline()
 
@@ -79,7 +82,8 @@ with open(sid_mismatches_path, 'r') as sid_mismatches:
     for line in sid_mismatches:
         song_labels[line[8:26]] = "<bad data: mismatched song>"
         i += 1
-        report("{0:5d} erroneous song labels noted...".format(i), sameline=True)
+        if (i % 100 == 0):
+            report("{0:5d} erroneous song labels noted...".format(i), sameline=True)
 
     report_newline()
 
@@ -112,14 +116,14 @@ def onpick(event):
     label = unicode(song_labels[track_id_echonest], errors='ignore')
 
     if last_ind == ind:
-        report_top(idx, 5)
+        report_top(idx, 20)
         return
     last_ind = ind
 
     if last_latent is not None:
         s = np.dot(last_latent, latents[ind]) / (np.linalg.norm(last_latent) * np.linalg.norm(latents[ind]))
         d = np.linalg.norm(last_latent - latents[ind])
-        report('Cosine distance:   {0: 7.5f}'.format(s))
+        report('Cosine similarity: {0: 7.5f}'.format(s))
         report('L2 distance:       {0: .5f}'.format(d))
     last_latent = latents[ind]
 
