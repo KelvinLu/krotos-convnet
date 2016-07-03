@@ -101,8 +101,10 @@ last_ind        = None
 def report_top(idx, n):
     report("\tGlobal closest songs:")
     closest = lf.closest(lf.Y[idx], n=n, ordered=True)
+    i = 0
     for echonest_id, score in closest:
-        report("\t\t{0:7.5}: {1}".format(score, song_labels[echonest_id]))
+        i += 1
+        report("\t\t{0}\t{1:7.5}: {2}".format(i, score, song_labels[echonest_id]))
 
 def onpick(event):
     global last_annotation
@@ -116,7 +118,7 @@ def onpick(event):
     label = unicode(song_labels[track_id_echonest], errors='ignore')
 
     if last_ind == ind:
-        report_top(idx, 20)
+        report_top(idx, 100)
         return
     last_ind = ind
 
