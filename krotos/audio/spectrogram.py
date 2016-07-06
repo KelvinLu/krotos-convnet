@@ -3,17 +3,17 @@ import librosa
 
 
 
-def mel_spectrogram(audio_path):
+def mel_spectrogram(audio_path, duration=29.0):
     y, sr = librosa.load(audio_path,
         sr = 22050,
-        duration=29.0,
+        duration=duration,
         mono=True
     )
 
     # Require audio samples to meet duration minimum.
-    if librosa.get_duration(y=y, sr=sr) < 29.0: return False, None
+    if librosa.get_duration(y=y, sr=sr) < duration: return False, None
 
-    s   = librosa.feature.melspectrogram(y, sr, n_mels=128, hop_length=512)
+    s   = librosa.feature.melspectrogram(y, sr, n_mels=128, hop_length=1024)
 
     # Log scale
     s   = librosa.logamplitude(s, ref_power=np.max, top_db=80.0)

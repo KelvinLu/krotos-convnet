@@ -70,7 +70,9 @@ class Dataset(object):
         mp3_path = os.path.join(MP3_DIR, cls._mp3_paths[sample_ind])
         assert os.path.exists(mp3_path)
 
-        spectrogram = mel_spectrogram(mp3_path)
+        success, spectrogram = mel_spectrogram(mp3_path)
+
+        assert success
 
         if file_cache:
             # TODO: Save spectrogram to file
