@@ -9,16 +9,47 @@
 import matplotlib.pyplot as plt
 import librosa
 import numpy as np
+import os
 import subprocess
 
 from krotos.msd import Dataset
 from krotos.msd.latent.features import LatentFeatures
+from krotos.paths import ROOT_PATH
+from krotos.debug import report, report_newline
 
 
 
 d = Dataset.instance(new=True)
 lf = LatentFeatures()
 batch = d.minibatch(5, mapping='LATENT_FEATURES', trim=False, audio_tempfile=True)
+
+song_labels = {}
+echonest    = lf._echonest
+
+unique_tracks_path = os.path.join(ROOT_PATH, 'msd/resources/unique_tracks.txt')
+if not os.path.exists(unique_tracks_path): raise Exception("unique_tracks.txt not found.")
+with open(unique_tracks_path, 'r') as unique_tracks:
+    i = 0
+    for line in unique_tracks:
+        _, song_id, artist, track = line.strip().split("<SEP>")
+        song_labels[song_id] = (artist + ' - ' + track)
+        i += 1
+        if (i % 5000 == 0):
+            report("{0:7d} song labels...".format(i), sameline=True)
+
+    report_newline()
+
+sid_mismatches_path = os.path.join(ROOT_PATH, 'msd/resources/sid_mismatches.txt')
+if not os.path.exists(sid_mismatches_path): raise Exception("sid_mismatches.txt not found.")
+with open(sid_mismatches_path, 'r') as sid_mismatches:
+    i = 0
+    for line in sid_mismatches:
+        song_labels[line[8:26]] = "<bad data: mismatched song>"
+        i += 1
+        if (i % 100 == 0):
+            report("{0:5d} erroneous song labels noted...".format(i), sameline=True)
+
+    report_newline()
 
 for sample in batch:
     s           = sample['spectrogram_image']
@@ -27,15 +58,15 @@ for sample in batch:
     artist_name = sample['artist_name']
     f           = sample['tempfile']
 
-    closest = lf.closest(features, n=20, ordered=True)
+    closest = lf.closest(features, n=200, ordered=True)
 
-    print '\t' + artist_name + ' - ' + title
-    print '\t' + '---'
+    report('\t' + artist_name + ' - ' + title)
+    report('\t' + '---')
 
     for track_id_echonest, distance in closest:
-        print '\t\t' + str(track_id_echonest) + '\t' + str(distance)
+        report('\t\t' + '{0:7.10f}'.format(distance) + '\t' + song_labels.get(track_id_echonest, ""))
 
-    print '\t' + '==='
+    report_newline()
 
 
     p = subprocess.Popen(['vlc', f.name])

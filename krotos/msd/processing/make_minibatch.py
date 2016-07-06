@@ -37,7 +37,8 @@ def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_t
 
         report("Minibatch: {}/{} samples downloaded and processed.".format(n - remainder, n), sameline=True)
 
-    report("Minibatch: {} samples downloaded and processed in {}s ({}s process time).".format(n, time.time() - time_start_world, time.clock() - time_start_proc), sameline=False)
+    report("Minibatch: {} samples downloaded and processed in {}s ({}s process time).".format(n, time.time() - time_start_world, time.clock() - time_start_proc), sameline=True)
+    report_newline()
 
     if trim:
         results = [(sample['spectrogram_image'], sample['mapping']) for sample in results]
