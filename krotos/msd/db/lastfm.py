@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 
 from krotos.paths import PATHS
+from krotos.utils import Singleton
 from krotos.msd.db.dbbase import DBConn
 from krotos.msd.db.queries import lastfm
 from krotos.debug import report
@@ -14,6 +15,8 @@ N_TAGS = 200
 
 
 class LastFMTagsDB(DBConn):
+    __metaclass__ = Singleton
+
     _initialized    = False
     _tag_subset     = None
     _tag_subset_ids = None
@@ -49,7 +52,6 @@ class LastFMTagsDB(DBConn):
         tags = self.get_tag_ids(track_id)
 
         return (np.vectorize(lambda x: 1.0 if x in tags else 0.0)(self._tag_subset_ids),
-            [row[1] for row in self._tag_subset if row[0] in tags],
             len(tags)
         )
 
@@ -58,3 +60,7 @@ class LastFMTagsDB(DBConn):
         data = res.fetchall()
 
         return np.intersect1d([row[0] for row in data], self._tag_subset_ids)
+
+    def get_tag_names(self, tag_vector):
+        if tag_vector is None: return []
+        return [row[1] for i, row in zip(xrange(N_TAGS), self._tag_subset) if tag_vector[i] > 0.0]

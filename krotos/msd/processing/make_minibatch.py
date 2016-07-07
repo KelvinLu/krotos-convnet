@@ -2,8 +2,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 import tempfile
 import time
 
-from krotos.exceptions import ParametersError
-from krotos.msd.utils import lastfm, msd_hdf5, sevendigital
+from krotos.msd.utils import lastfm, latent, msd_hdf5, sevendigital
 from krotos.msd.latent.features import LatentFeatures
 from krotos.audio import spectrogram
 from krotos.debug import report, report_newline
@@ -13,10 +12,8 @@ from krotos.debug import report, report_newline
 WORKERS = 4
 
 
-# kwarg mapping may be one of the following:
-#   'LATENT_FEATURES'
-#   'LASTFM_TAGS'
-def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_tempfile=False):
+
+def make_minibatch(dataset, n=10, mapping='BOTH', trim=False, audio_tempfile=False):
     remainder   = n
     results     = []
 
@@ -40,29 +37,12 @@ def make_minibatch(dataset, n=10, mapping='LATENT_FEATURES', trim=False, audio_t
     report("Minibatch: {} samples downloaded and processed in {}s ({}s process time).".format(n, time.time() - time_start_world, time.clock() - time_start_proc), sameline=True)
     report_newline()
 
-    if trim:
-        results = [(sample['spectrogram_image'], sample['mapping']) for sample in results]
+    # if trim:
+    #     results = [(sample['spectrogram_image'], sample['mapping']) for sample in results]
 
     return results
 
-def output_latent_features_mapping(track_id_echonest):
-    latents = LatentFeatures().get(track_id_echonest)[0]
-
-    if latents is None: return None, None
-
-    return latents, None
-
-def output_lastfm_tags_mapping(track_id):
-    tag_vector, tag_names, num_tags = lastfm.get_tag_data(track_id)
-
-    if not num_tags: return None, None
-
-    return tag_vector, {
-        'tag_names':    tag_names,
-        'num_tags':     num_tags,
-    }
-
-def select_samples(dataset, n, mapping, audio_tempfile=False):
+def select_samples(dataset, n, mapping='BOTH', audio_tempfile=False):
     samples = []
 
     # Get metadata and Last.fm tags for a track.
@@ -76,16 +56,16 @@ def select_samples(dataset, n, mapping, audio_tempfile=False):
 
         if not track_id_7digital: continue
 
-        mapping_output, misc = None, None
+        latent_features = None
+        if (mapping == 'BOTH') or (mapping == 'LATENT_FEATURES'):
+            latent_features                 = latent.get_latent_features(track_id_echonest)
+            if latent_features is None: continue
 
-        if mapping == 'LATENT_FEATURES':
-            mapping_output, misc = output_latent_features_mapping(track_id_echonest)
-        elif mapping == 'LASTFM_TAGS':
-            mapping_output, misc = output_lastfm_tags_mapping(track_id)
-        else:
-            raise ParametersError('Bad value for parameter mapping')
-
-        if mapping_output is None: continue
+        tag_vector  = None
+        num_tags    = 0
+        if (mapping == 'BOTH') or (mapping == 'TAG_VECTOR'):
+            tag_vector, num_tags = lastfm.get_tag_vector(track_id)
+            if not num_tags: continue
 
         samples.append({
             'track_id':             track_id,
@@ -93,8 +73,8 @@ def select_samples(dataset, n, mapping, audio_tempfile=False):
             'track_id_echonest':    track_id_echonest,
             'title':                title,
             'artist_name':          artist_name,
-            'mapping':              mapping_output,
-            'misc':                 misc,
+            'latent_features':      latent_features,
+            'tag_vector':           tag_vector,
             'tempfile':             audio_tempfile,
         })
 

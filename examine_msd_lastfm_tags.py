@@ -12,18 +12,21 @@ import numpy as np
 import subprocess
 
 from krotos.msd import Dataset
+from krotos.msd.utils import lastfm
 
 
 
 d = Dataset.instance(new=True)
-batch = d.minibatch(20, mapping='LASTFM_TAGS', trim=False, audio_tempfile=True)
+batch = d.minibatch(20, mapping='TAG_VECTOR', trim=False, audio_tempfile=True)
 
 for sample in batch:
     s           = sample['spectrogram_image']
     title       = sample['title']
     artist_name = sample['artist_name']
-    tags        = sample['misc']['tag_names']
+    tag_vector  = sample['tag_vector']
     f           = sample['tempfile']
+
+    tags = lastfm.get_tag_names(tag_vector)
 
     p = subprocess.Popen(['vlc', f.name])
 

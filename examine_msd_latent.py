@@ -53,7 +53,7 @@ with open(sid_mismatches_path, 'r') as sid_mismatches:
 
 for sample in batch:
     s           = sample['spectrogram_image']
-    features    = sample['mapping']
+    features    = sample['latent_features']
     title       = sample['title']
     artist_name = sample['artist_name']
     f           = sample['tempfile']
