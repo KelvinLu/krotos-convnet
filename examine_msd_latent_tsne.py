@@ -102,9 +102,9 @@ def report_top(idx, n):
     report("\tGlobal closest songs:")
     closest = lf.closest(lf.Y[idx], n=n, ordered=True)
     i = 0
-    for echonest_id, score in closest:
+    for echonest_id, score, norm in closest:
         i += 1
-        report("\t\t{0}\t{1:7.5}: {2}".format(i, score, song_labels[echonest_id]))
+        report("\t\t{0}\t{1:7.5} ({2:7.5}): {3}".format(i, score, norm, song_labels[echonest_id]))
 
 def onpick(event):
     global last_annotation

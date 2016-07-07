@@ -245,8 +245,8 @@ class LatentFeatures(object):
         closest_idx = np.argpartition(r, -n)[-n:]
 
         track_ids_echonest, idxs = self._echonest.get_track_ids(closest_idx)
-
-        results = zip(track_ids_echonest, r[list(idxs)])
+        idxs = list(idxs)
+        results = zip(track_ids_echonest, r[idxs], song_norm[idxs])
 
         if ordered:
             results = sorted(results, key=lambda x: x[1], reverse=True)

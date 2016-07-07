@@ -21,7 +21,7 @@ from krotos.debug import report, report_newline
 
 d = Dataset.instance(new=True)
 lf = LatentFeatures()
-batch = d.minibatch(5, mapping='LATENT_FEATURES', trim=False, audio_tempfile=True)
+batch = d.minibatch(20, mapping='LATENT_FEATURES', trim=False, audio_tempfile=True)
 
 song_labels = {}
 echonest    = lf._echonest
@@ -63,8 +63,8 @@ for sample in batch:
     report('\t' + artist_name + ' - ' + title)
     report('\t' + '---')
 
-    for track_id_echonest, distance in closest:
-        report('\t\t' + '{0:7.10f}'.format(distance) + '\t' + song_labels.get(track_id_echonest, ""))
+    for track_id_echonest, distance, norm in closest:
+        report('\t\t' + '{0:7.5f} ({1:7.5f})'.format(distance, norm) + '\t' + song_labels.get(track_id_echonest, ""))
 
     report_newline()
 
