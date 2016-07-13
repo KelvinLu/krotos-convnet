@@ -13,7 +13,7 @@ WORKERS = 4
 
 
 
-def make_minibatch(dataset, n=10, mapping='BOTH', trim=False, audio_tempfile=False):
+def make_minibatch(dataset, n=10, mapping='both', trim=False, normalize=False, audio_tempfile=False):
     remainder   = n
     results     = []
 
@@ -25,7 +25,7 @@ def make_minibatch(dataset, n=10, mapping='BOTH', trim=False, audio_tempfile=Fal
     # Workers should never be processing tracks such that more than
     # n tracks are downloaded from 7digital. We must conserve our API calls.
     while remainder > 0:
-        samples = select_samples(dataset, remainder, mapping, audio_tempfile)
+        samples = select_samples(dataset, remainder, mapping, normalize, audio_tempfile)
 
         interim = pool.map(process_sample, samples)
 
@@ -37,12 +37,17 @@ def make_minibatch(dataset, n=10, mapping='BOTH', trim=False, audio_tempfile=Fal
     report("Minibatch: {} samples downloaded and processed in {}s ({}s process time).".format(n, time.time() - time_start_world, time.clock() - time_start_proc), sameline=True)
     report_newline()
 
-    # if trim:
-    #     results = [(sample['spectrogram_image'], sample['mapping']) for sample in results]
+    if trim:
+        if mapping == 'latent_features':
+            results = [(sample['spectrogram_image'], sample['latent_features']) for sample in results]
+        elif mapping == 'tag_vector':
+            results = [(sample['spectrogram_image'], sample['tag_vector']) for sample in results]
+        else:
+            results = [(sample['spectrogram_image'], (sample['latent_features'], sample['tag_vector'])) for sample in results]
 
     return results
 
-def select_samples(dataset, n, mapping='BOTH', audio_tempfile=False):
+def select_samples(dataset, n, mapping='both', normalize=False, audio_tempfile=False):
     samples = []
 
     # Get metadata and Last.fm tags for a track.
@@ -57,13 +62,13 @@ def select_samples(dataset, n, mapping='BOTH', audio_tempfile=False):
         if not track_id_7digital: continue
 
         latent_features = None
-        if (mapping == 'BOTH') or (mapping == 'LATENT_FEATURES'):
-            latent_features                 = latent.get_latent_features(track_id_echonest)
+        if (mapping == 'both') or (mapping == 'latent_features'):
+            latent_features = latent.get_latent_features(track_id_echonest, normalize)
             if latent_features is None: continue
 
         tag_vector  = None
         num_tags    = 0
-        if (mapping == 'BOTH') or (mapping == 'TAG_VECTOR'):
+        if (mapping == 'both') or (mapping == 'tag_vector'):
             tag_vector, num_tags = lastfm.get_tag_vector(track_id)
             if not num_tags: continue
 

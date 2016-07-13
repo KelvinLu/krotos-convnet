@@ -92,8 +92,8 @@ class Dataset(object):
         return np.random.choice(self._training_inds)
 
     # kwarg mapping may be one of the following:
-    #   'BOTH'
-    #   'LATENT_FEATURES'
-    #   'TAG_VECTOR'
-    def minibatch(self, n=10, mapping='BOTH', trim=True, audio_tempfile=False):
-        return make_minibatch(self, n, mapping=mapping, trim=trim, audio_tempfile=audio_tempfile)
+    #   'both'
+    #   'latent_features'
+    #   'tag_vector'
+    def minibatch(self, n=10, mapping='both', trim=True, normalize=False, audio_tempfile=False):
+        return make_minibatch(self, n, mapping=mapping, trim=trim, normalize=normalize, audio_tempfile=audio_tempfile)
