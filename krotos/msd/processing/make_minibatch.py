@@ -9,7 +9,7 @@ from krotos.debug import report, report_newline
 
 
 
-WORKERS = 4
+WORKERS = 1
 
 
 

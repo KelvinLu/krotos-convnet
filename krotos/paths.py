@@ -12,6 +12,7 @@ PATHS = {
     'msd_lastfm_db':        os.path.join(ROOT_PATH, 'msd/resources/lastfm_tags.db'),
     'tag_subset':           os.path.join(ROOT_PATH, 'msd/resources/tag_subset.pickle'),
     'msd_dataset_split':    os.path.join(ROOT_PATH, 'msd/resources/split.pickle'),
+    'convnet_dir':          os.path.join(ROOT_PATH, 'convnet/resources/'),
 }
 
 def mkdir_path(key):

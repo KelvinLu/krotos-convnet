@@ -22,4 +22,4 @@ def mel_spectrogram(audio_path, duration=29.0):
     s  += 80.0
     s  *= 0.0125 # multiplication is faster than division
 
-    return True, s
+    return True, s.T

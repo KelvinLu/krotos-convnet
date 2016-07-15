@@ -31,7 +31,7 @@ for sample in batch:
     p = subprocess.Popen(['vlc', f.name])
 
     plt.clf()
-    librosa.display.specshow(s, hop_length=1024, x_axis='time', y_axis='mel')
+    librosa.display.specshow(s, hop_length=1024, x_axis='mel', y_axis='time')
     plt.colorbar(format='%1.3f')
 
     plt.title(artist_name.encode('utf-8', 'ignore') + ' - ' + title.encode('utf-8', 'ignore') + ' | ' + ', '.join(tags))
