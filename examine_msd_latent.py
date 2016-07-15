@@ -15,7 +15,7 @@ import subprocess
 from krotos.msd import Dataset
 from krotos.msd.latent.features import LatentFeatures
 from krotos.paths import ROOT_PATH
-from krotos.debug import report, report_newline
+from krotos.debug import report
 
 
 
@@ -49,7 +49,7 @@ with open(sid_mismatches_path, 'r') as sid_mismatches:
         if (i % 100 == 0):
             report("{0:5d} erroneous song labels noted...".format(i), sameline=True)
 
-    report_newline()
+    report('')
 
 for sample in batch:
     s           = sample['spectrogram_image']
@@ -66,8 +66,7 @@ for sample in batch:
     for track_id_echonest, distance, norm in closest:
         report('\t\t' + '{0:7.5f} ({1:7.5f})'.format(distance, norm) + '\t' + song_labels.get(track_id_echonest, ""))
 
-    report_newline()
-
+    report('')
 
     p = subprocess.Popen(['vlc', f.name])
 

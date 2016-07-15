@@ -1,7 +1,22 @@
-def report_newline():
-    print "\n",
+LAST_SAMELINE_LEN   = 0
+LAST_SAMELINE       = False
+
 
 def report(message, sameline=False):
-    if sameline: print "\r",
+    global LAST_SAMELINE_LEN
+    global LAST_SAMELINE
+
+    if sameline:
+        print "\r         " + (' ' * LAST_SAMELINE_LEN) + "\r",
+    elif LAST_SAMELINE:
+        print "\n",
+
     print "[krotos] {}".format(message),
-    if not sameline: print "\n",
+
+    if sameline:
+        LAST_SAMELINE_LEN = len(message)
+    else:
+        print "\n",
+        LAST_SAMELINE_LEN = 0
+
+    LAST_SAMELINE = sameline

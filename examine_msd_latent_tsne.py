@@ -12,7 +12,7 @@ from sklearn.cluster import MiniBatchKMeans, AgglomerativeClustering
 
 from krotos.msd.latent.features import LatentFeatures
 from krotos.paths import ROOT_PATH
-from krotos.debug import report, report_newline
+from krotos.debug import report
 
 
 
@@ -73,7 +73,7 @@ with open(unique_tracks_path, 'r') as unique_tracks:
         if (i % 5000 == 0):
             report("{0:7d} song labels...".format(i), sameline=True)
 
-    report_newline()
+        report('')
 
 sid_mismatches_path = os.path.join(ROOT_PATH, 'msd/resources/sid_mismatches.txt')
 if not os.path.exists(sid_mismatches_path): raise Exception("sid_mismatches.txt not found.")
@@ -85,7 +85,7 @@ with open(sid_mismatches_path, 'r') as sid_mismatches:
         if (i % 100 == 0):
             report("{0:5d} erroneous song labels noted...".format(i), sameline=True)
 
-    report_newline()
+        report('')
 
 
 
@@ -151,4 +151,4 @@ fig.canvas.mpl_connect('pick_event', onpick)
 
 report("Displaying plot")
 plt.show()
-report_newline()
+report('')

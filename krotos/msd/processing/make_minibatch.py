@@ -1,11 +1,12 @@
 from multiprocessing.dummy import Pool as ThreadPool
 import tempfile
 import time
+import datetime
 
 from krotos.msd.utils import lastfm, latent, msd_hdf5, sevendigital
 from krotos.msd.latent.features import LatentFeatures
 from krotos.audio import spectrogram
-from krotos.debug import report, report_newline
+from krotos.debug import report
 
 
 
@@ -27,15 +28,16 @@ def make_minibatch(dataset, n=10, mapping='both', trim=False, normalize=False, a
     while remainder > 0:
         samples = select_samples(dataset, remainder, mapping, normalize, audio_tempfile)
 
-        interim = pool.map(process_sample, samples)
-
-        results.extend([result for result in interim if result is not None])
+        for success, result in pool.map(process_sample, samples):
+            if success:
+                results.append(result)
+            elif result is not None:
+                report("{0} {1}".format(datetime.datetime.now(), result))
         remainder = n - len(results)
 
         report("Minibatch: {}/{} samples downloaded and processed.".format(n - remainder, n), sameline=True)
 
     report("Minibatch: {} samples downloaded and processed in {}s ({}s process time).".format(n, time.time() - time_start_world, time.clock() - time_start_proc), sameline=True)
-    report_newline()
 
     if trim:
         if mapping == 'latent_features':
@@ -89,10 +91,10 @@ def process_sample(sample):
     track_id_7digital = sample['track_id_7digital']
 
     f = tempfile.NamedTemporaryFile(suffix=".mp3")
-    success, response = sevendigital.get_preview_track(track_id_7digital, f)
+    success, result = sevendigital.get_preview_track(track_id_7digital, f)
     if not success:
         f.close()
-        return None
+        return (False, result)
 
     f.flush()
     f.seek(0)
@@ -100,7 +102,7 @@ def process_sample(sample):
     success, spec = spectrogram.mel_spectrogram(f.name)
     if not success:
         f.close()
-        return None
+        return (False, result)
 
     sample['spectrogram_image'] = spec
 
@@ -109,4 +111,4 @@ def process_sample(sample):
     else:
         f.close()
 
-    return sample
+    return (True, sample)

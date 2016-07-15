@@ -3,7 +3,7 @@ import numpy as np
 from krotos.paths import PATHS
 from krotos.msd.db.dbbase import DBConn
 from krotos.msd.db.queries import echonest
-from krotos.debug import report, report_newline
+from krotos.debug import report
 
 
 
@@ -50,7 +50,7 @@ class EchoNestTasteDB(DBConn):
             result = np.append(result, batch, axis=0)
             report("{:7.3f}% of rows fetched.".format(result.shape[0] * 100.0 / total), sameline=True)
 
-        report_newline()
+        report('')
 
         return result[:, 0], result[:, 1], result[:, 2]
 

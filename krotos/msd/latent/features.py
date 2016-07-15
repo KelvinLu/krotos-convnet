@@ -8,7 +8,7 @@ from krotos.paths import PATHS, mkdir_path
 from krotos.utils import Singleton
 from krotos.msd.db.echonest import EchoNestTasteDB
 from krotos.exceptions import ParametersError
-from krotos.debug import report, report_newline
+from krotos.debug import report
 from krotos.msd.latent import als
 
 
@@ -154,7 +154,6 @@ class LatentFeatures(object):
             if (u % 100) == 0:
                 report("{:7.3f}% of users read from SQLite.".format(u * 100.0 / self.m), sameline=True)
 
-        report_newline()
         return R.tocoo()
 
     def _confidence_row_iter(self, C_ab, A_row_ind):
@@ -213,7 +212,7 @@ class LatentFeatures(object):
                     self._save_latents('X')
                     self._save_progress(idx=(self.progress['idx'] + batch_size))
 
-                report_newline()
+                    report('')
                 self._save_progress(mtx='Y', idx=0)
 
             if self.progress['mtx'] == 'Y':
@@ -227,7 +226,7 @@ class LatentFeatures(object):
                     self._save_latents('Y')
                     self._save_progress(idx=(self.progress['idx'] + batch_size))
 
-                report_newline()
+                    report('')
                 self._save_progress(mtx='X', idx=0)
 
             self._save_progress(rnd=(rnd + 1))

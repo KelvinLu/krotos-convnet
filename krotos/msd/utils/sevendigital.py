@@ -18,10 +18,10 @@ def get_preview_track(track_id_7digital, write_file):
         response =  requests.get(url, stream=True, timeout=2.0)
     except requests.exceptions.ConnectionError as e:
         time.sleep(3)
-        return False, None
+        return False, e
     except Exception as e:
         time.sleep(3)
-        return False, None
+        return False, e
 
     if not response.ok: return False, response
 

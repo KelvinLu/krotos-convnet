@@ -1,11 +1,12 @@
 import tensorflow as tf
 import numpy as np
 import time
+import datetime
 
 from krotos.convnet.model.network import build_network
 from krotos.convnet.model.training import training_mse_loss, training_op
 from krotos.msd.dataset import Dataset
-from krotos.debug import report, report_newline
+from krotos.debug import report
 from krotos.paths import PATHS
 
 
@@ -86,6 +87,7 @@ def train():
             })
 
             report('Training: Step {0} had MSE loss {1}'.format(step, mse_loss))
+            report('\t{0}'.format(datetime.datetime.now()))
             report("\tSession ran in {}s ({}s process time).".format(time.time() - time_start_world, time.clock() - time_start_proc))
 
             if step % SAVE_BATCHES == 0:
