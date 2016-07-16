@@ -61,11 +61,12 @@ class Dataset(object):
     @classmethod
     def _get_spectrogram(cls, sample_ind, file_cache=True):
         sample_id = cls._ids[sample_ind]
-        spectrogram_path = os.path.join(SPECTROGRAM_DIR, '{0}.mel' % sample_id)
+        spectrogram_path = os.path.join(SPECTROGRAM_DIR, '{0}.npy'.format(sample_id))
 
         if file_cache and os.path.exists(spectrogram_path):
-            # TODO: Load cached spectrogram from file
-            pass
+            f = open(spectrogram_path, mode='r')
+            spectrogram = np.load(f)
+            f.close()
 
         mp3_path = os.path.join(MP3_DIR, cls._mp3_paths[sample_ind])
         assert os.path.exists(mp3_path)
@@ -75,8 +76,9 @@ class Dataset(object):
         assert success
 
         if file_cache:
-            # TODO: Save spectrogram to file
-            pass
+            f = open(spectrogram_path, mode='w')
+            np.save(f, spectrogram)
+            f.close()
 
         return spectrogram
 
