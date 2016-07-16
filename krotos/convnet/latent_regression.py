@@ -69,7 +69,7 @@ def train():
 
         sess.run(init_op)
 
-        ckpt = tf.train.get_checkpoint_state(PATHS['convnet_dir'])
+        ckpt = tf.train.get_checkpoint_state(PATHS['convnet_dir'] + 'latent_regression/')
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
 
@@ -91,6 +91,6 @@ def train():
             report("\tSession ran in {}s ({}s process time).".format(time.time() - time_start_world, time.clock() - time_start_proc))
 
             if step % SAVE_BATCHES == 0:
-                saver.save(sess, PATHS['convnet_dir'] + CHECKPOINT_FILENAME, global_step=step)
+                saver.save(sess, PATHS['convnet_dir'] + 'latent_regression/' + CHECKPOINT_FILENAME, global_step=step)
 
         sess.close()

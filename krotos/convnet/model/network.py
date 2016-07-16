@@ -38,6 +38,9 @@ def fc_layer(name, input_layer, neurons, dropout=0.5):
 
     return output_layer
 
+def sigmoid_layer(input_layer):
+    return tf.sigmoid(input_layer, name='sigmoid_layer')
+
 def build_network(input_layer, output_size):
     with tf.variable_scope('network') as scope:
         # Use expand_dims to convert tensor of [batch, height, width]

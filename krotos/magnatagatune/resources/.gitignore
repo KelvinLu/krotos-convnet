@@ -2,3 +2,4 @@
 *.zip
 .~lock.*
 mp3/*
+*.npz

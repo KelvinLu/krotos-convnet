@@ -7,6 +7,11 @@ def training_mse_loss(output, labels):
         loss = tf.reduce_mean(tf.square(tf.sub(output, labels)), name='mse_loss')
     return loss
 
+def training_sigmoid_cross_entropy(output, labels):
+    with tf.variable_scope('loss') as scope:
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(output, labels, name='sigmoid_cross_entropy')
+    return loss
+
 def training_op(loss, initial_learning_rate, global_step, decay_steps, decay_rate):
     lr = tf.train.exponential_decay(
         learning_rate=initial_learning_rate,
