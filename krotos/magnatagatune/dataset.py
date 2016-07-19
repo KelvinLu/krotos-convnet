@@ -75,7 +75,8 @@ class Dataset(object):
 
         success, spectrogram = mel_spectrogram(mp3_path, duration=29.0)
 
-        assert success
+        if not success:
+            return None
 
         if file_cache:
             f = open(spectrogram_path, mode='w')
@@ -110,15 +111,26 @@ class Dataset(object):
             np.savez(f, training_inds=self._training_inds, validation_inds=self._validation_inds, testing_inds=self._testing_inds)
 
     def minibatch(self, samples=10):
-        batch_inds = np.random.choice(self._training_inds, size=samples, replace=False)
+        batch = []
 
-        return [(self._get_spectrogram(ind), np.asarray(list(self._tags[ind]), dtype='f4')) for ind in batch_inds]
+        while (samples):
+            batch_inds = np.random.choice(self._training_inds, size=samples, replace=False)
+            for ind in batch_inds:
+                s = self._get_spectrogram(ind),
+                t = np.asarray(list(self._tags[ind]), dtype='f4')
+                if s is not None and t is not None:
+                    batch.append((s, t))
+                    samples -= 1
+
+        return batch
 
     def human_examine(self, samples=5):
         batch_inds = np.random.choice(self.sample_size, size=samples, replace=False)
 
         for ind in batch_inds:
-            yield (self._get_spectrogram(ind),
+            s = self._get_spectrogram(ind)
+            if s is None: continue
+            yield (s,
                 [field for field, tag in zip(self.fields, self._tags[ind]) if tag],
                 os.path.join(MP3_DIR, self._mp3_paths[ind])
             )

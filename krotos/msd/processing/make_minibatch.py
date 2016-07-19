@@ -99,12 +99,12 @@ def process_sample(sample):
     f.flush()
     f.seek(0)
 
-    success, spec = spectrogram.mel_spectrogram(f.name)
+    success, result = spectrogram.mel_spectrogram(f.name)
     if not success:
         f.close()
         return (False, result)
 
-    sample['spectrogram_image'] = spec
+    sample['spectrogram_image'] = result
 
     if sample['tempfile'] == True:
         sample['tempfile'] = f

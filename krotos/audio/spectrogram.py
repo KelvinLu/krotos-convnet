@@ -4,11 +4,14 @@ import librosa
 
 
 def mel_spectrogram(audio_path, duration=29.0):
-    y, sr = librosa.load(audio_path,
-        sr = 22050,
-        duration=duration,
-        mono=True
-    )
+    try:
+        y, sr = librosa.load(audio_path,
+            sr = 22050,
+            duration=duration,
+            mono=True
+        )
+    except EOFError as e:
+        return False, None
 
     # Require audio samples to meet duration minimum.
     if librosa.get_duration(y=y, sr=sr) < duration: return False, None
