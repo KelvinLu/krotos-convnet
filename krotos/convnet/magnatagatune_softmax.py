@@ -65,13 +65,15 @@ def train():
 
         tf.train.start_queue_runners(sess)
 
-        for step in xrange(sess.run(global_step) + 1, MAX_BATCHES + 1):
+        step = sess.run(global_step)
+
+        while(step < MAX_BATCHES):
             images, labels = batch()
 
             time_start_world    = time.time()
             time_start_proc     = time.clock()
 
-            mean_loss, _, _ = sess.run([tf.reduce_mean(sigmoid_cross_entropy_loss_op), train_op, check_op], feed_dict={
+            step, mean_loss, _, _ = sess.run([global_step, tf.reduce_mean(sigmoid_cross_entropy_loss_op), train_op, check_op], feed_dict={
                 batch_images: images,
                 batch_labels: labels,
             })
