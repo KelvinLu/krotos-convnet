@@ -11,7 +11,7 @@ from krotos.paths import PATHS
 
 
 
-MAX_BATCHES         = 2300
+MAX_BATCHES         = 3000
 SAVE_BATCHES        = 50
 BATCH_SIZE          = 10
 
@@ -24,8 +24,8 @@ IMAGE_HEIGHT        = 625
 IMAGE_WIDTH         = 128
 
 INITIAL_LEARNING_RATE       = 0.001
-LEARNING_RATE_DECAY_FACTOR  = 0.96
-DECAY_STEPS                 = 200
+LEARNING_RATE_DECAY_FACTOR  = 0.94
+DECAY_STEPS                 = 100
 
 
 
@@ -78,9 +78,10 @@ def train():
                 batch_labels: labels,
             })
 
-            report('Training: Step {0} had a mean sigmoid cross entropy loss {1}'.format(step, mean_loss))
-            report('\t{0}'.format(datetime.datetime.now()))
-            report("\tSession ran in {}s ({}s process time).".format(time.time() - time_start_world, time.clock() - time_start_proc))
+            if step % 10 == 0:
+                report('Training: Step {0} had a mean sigmoid cross entropy loss {1}'.format(step, mean_loss))
+                report('\t{0}'.format(datetime.datetime.now()))
+                report("\tSession ran in {}s ({}s process time).".format(time.time() - time_start_world, time.clock() - time_start_proc))
 
             if step % SAVE_BATCHES == 0:
                 saver.save(sess, PATHS['convnet_dir'] + 'magnatagatune_softmax/' + CHECKPOINT_FILENAME, global_step=step)
