@@ -17,7 +17,7 @@ def training_op(loss, initial_learning_rate, global_step, decay_steps, decay_rat
         learning_rate=initial_learning_rate,
         global_step=global_step,
         decay_steps=decay_steps,
-        decay_rate=decay_steps,
+        decay_rate=decay_rate,
         staircase=True,
         name='learning_rate'
     )
