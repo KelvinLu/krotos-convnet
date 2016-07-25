@@ -116,7 +116,7 @@ class Dataset(object):
         while (samples):
             batch_inds = np.random.choice(self._training_inds, size=samples, replace=False)
             for ind in batch_inds:
-                s = self._get_spectrogram(ind),
+                s = self._get_spectrogram(ind)
                 t = np.asarray(list(self._tags[ind]), dtype='f4')
                 if s is not None and t is not None:
                     batch.append((s, t))
